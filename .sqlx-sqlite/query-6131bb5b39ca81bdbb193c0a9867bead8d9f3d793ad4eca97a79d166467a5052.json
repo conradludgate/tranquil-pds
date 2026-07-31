@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT storage_key FROM blobs WHERE cid = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "storage_key",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "6131bb5b39ca81bdbb193c0a9867bead8d9f3d793ad4eca97a79d166467a5052"
+}

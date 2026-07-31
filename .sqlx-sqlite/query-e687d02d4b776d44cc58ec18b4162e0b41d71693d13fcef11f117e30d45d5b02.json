@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO account_delegations (delegated_did, controller_did, granted_scopes, granted_by)\n            VALUES ($1, $2, $3, $4)\n            RETURNING id as \"id!: Vec<u8>\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!: Vec<u8>",
+        "ordinal": 0,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "e687d02d4b776d44cc58ec18b4162e0b41d71693d13fcef11f117e30d45d5b02"
+}

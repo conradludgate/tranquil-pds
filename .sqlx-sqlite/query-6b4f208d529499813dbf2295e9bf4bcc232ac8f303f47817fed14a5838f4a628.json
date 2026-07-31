@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT available_uses, COALESCE(disabled, 0) as \"disabled!: i64\" FROM invite_codes WHERE code = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "available_uses",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "disabled!: i64",
+        "ordinal": 1,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "6b4f208d529499813dbf2295e9bf4bcc232ac8f303f47817fed14a5838f4a628"
+}

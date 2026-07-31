@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT code FROM oauth_2fa_challenge WHERE request_uri = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "code",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5cee16f49a727d66b5231a8d07d7f4bcb6a1136fbf3e3d249fd33600772ac80f"
+}

@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO delegation_audit_log\n                (delegated_did, actor_did, controller_did, action_type, action_details, ip_address, user_agent)\n            VALUES ($1, $2, $3, $4, $5, $6, $7)\n            RETURNING id as \"id!: Vec<u8>\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!: Vec<u8>",
+        "ordinal": 0,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "bf5efb21fd8188308144ecdc65cb16e8658715e94743fe99427a2be1ca580e87"
+}

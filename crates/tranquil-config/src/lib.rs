@@ -597,7 +597,8 @@ pub struct FrontendConfig {
 #[derive(Debug, Config)]
 #[config(layer_attr(serde(deny_unknown_fields)))]
 pub struct DatabaseConfig {
-    /// PostgreSQL connection URL.
+    /// Database connection URL. Use a PostgreSQL URL for the Postgres backend
+    /// or a `sqlite://...` URL for the SQLite backend.
     #[config(env = "DATABASE_URL")]
     pub url: String,
 
@@ -717,6 +718,7 @@ impl SecretsConfig {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RepoBackend {
     Postgres,
+    Sqlite,
     TranquilStore,
 }
 
@@ -726,9 +728,10 @@ impl std::str::FromStr for RepoBackend {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "postgres" => Ok(Self::Postgres),
+            "sqlite" => Ok(Self::Sqlite),
             "tranquil-store" => Ok(Self::TranquilStore),
             other => Err(format!(
-                "unknown repo backend \"{other}\", expected \"postgres\" or \"tranquil-store\""
+                "unknown repo backend \"{other}\", expected \"postgres\", \"sqlite\", or \"tranquil-store\""
             )),
         }
     }
@@ -738,6 +741,7 @@ impl fmt::Display for RepoBackend {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Postgres => f.write_str("postgres"),
+            Self::Sqlite => f.write_str("sqlite"),
             Self::TranquilStore => f.write_str("tranquil-store"),
         }
     }
@@ -762,7 +766,7 @@ pub struct StorageConfig {
     #[config(env = "S3_ENDPOINT")]
     pub s3_endpoint: Option<String>,
 
-    /// Repository backend: `postgres` by default, or `tranquil-store`, our embedded db.
+    /// Repository backend: `postgres` by default, `sqlite`, or `tranquil-store`, our embedded db.
     /// tranquil-store is EXPERIMENTAL!!!! RISK OF TOTAL DATA LOSS.
     #[config(env = "REPO_BACKEND", default = "postgres")]
     pub repo_backend: String,
@@ -1623,6 +1627,15 @@ pub fn template() -> String {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn repo_backend_supports_sqlite() {
+        assert_eq!(
+            "sqlite".parse::<RepoBackend>().unwrap(),
+            RepoBackend::Sqlite
+        );
+        assert_eq!(RepoBackend::Sqlite.to_string(), "sqlite");
+    }
+
     use super::*;
 
     fn seed_required_env() {

@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT\n                u.did,\n                u.handle,\n                d.granted_scopes,\n                CAST(d.granted_at AS TEXT) as \"granted_at!: String\"\n            FROM account_delegations d\n            JOIN users u ON u.did = d.delegated_did\n            WHERE d.controller_did = $1\n              AND d.revoked_at IS NULL\n              AND u.deactivated_at IS NULL\n              AND u.takedown_ref IS NULL\n            ORDER BY d.granted_at DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "did",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "handle",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "granted_scopes",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "granted_at!: String",
+        "ordinal": 3,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "f15389016df83c343b4757ac827d57f87eefee546c56e2be1890f6e17f4279eb"
+}

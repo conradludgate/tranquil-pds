@@ -153,7 +153,8 @@
 #dir = "/var/lib/tranquil-pds/frontend"
 
 [database]
-# PostgreSQL connection URL.
+# Database connection URL. Use a PostgreSQL URL for the postgres backend or a
+# sqlite:// URL for the SQLite backend.
 #
 # Can also be specified via environment variable `DATABASE_URL`.
 #
@@ -240,6 +241,7 @@
 #s3_endpoint =
 
 # Repository backend: `postgres` by default, or `tranquil-store`, our embedded db.
+# Supported values are "postgres", "sqlite", and "tranquil-store".
 # tranquil-store is EXPERIMENTAL!!!! RISK OF TOTAL DATA LOSS.
 #
 # Can also be specified via environment variable `REPO_BACKEND`.

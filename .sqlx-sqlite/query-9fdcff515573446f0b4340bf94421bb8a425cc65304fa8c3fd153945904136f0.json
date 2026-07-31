@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT device_id FROM signal_sessions\n             WHERE address = $1 AND device_id != $2 AND identity = $3",
+  "describe": {
+    "columns": [
+      {
+        "name": "device_id",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "9fdcff515573446f0b4340bf94421bb8a425cc65304fa8c3fd153945904136f0"
+}

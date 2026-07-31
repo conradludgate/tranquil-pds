@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT state_json FROM webauthn_challenges\n               WHERE did = $1 AND challenge_type = 'discoverable' AND expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now')\n               ORDER BY created_at DESC LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "state_json",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2ab8ba97c5baa12419cc4304828c9565fb44f19c67cfa6a0d6c31f2b2df28184"
+}

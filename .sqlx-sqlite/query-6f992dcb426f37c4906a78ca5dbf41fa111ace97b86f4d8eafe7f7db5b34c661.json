@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE session_tokens\n            SET access_jti = $1, refresh_jti = $2, access_expires_at = $3,\n                refresh_expires_at = $4, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')\n            WHERE id = $5\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "6f992dcb426f37c4906a78ca5dbf41fa111ace97b86f4d8eafe7f7db5b34c661"
+}

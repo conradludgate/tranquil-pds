@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT st.id as \"id!: i64\", st.did, st.scope, st.controller_did, k.key_bytes, k.encryption_version\n            FROM session_tokens st\n            JOIN users u ON st.did = u.did\n            JOIN user_keys k ON u.id = k.user_id\n            WHERE st.refresh_jti = $1 AND st.refresh_expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now')\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!: i64",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "did",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "scope",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "controller_did",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "key_bytes",
+        "ordinal": 4,
+        "type_info": "Blob"
+      },
+      {
+        "name": "encryption_version",
+        "ordinal": 5,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      true,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "b020a61d36637ccf7037eddc3951418156fc0d5c83c5451264bcbba3cea0df4b"
+}

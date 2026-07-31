@@ -1,0 +1,56 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, handle, email, email_verified, discord_verified, telegram_verified, signal_verified\n               FROM users WHERE did = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "handle",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "email",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "email_verified",
+        "ordinal": 3,
+        "type_info": "Integer"
+      },
+      {
+        "name": "discord_verified",
+        "ordinal": 4,
+        "type_info": "Integer"
+      },
+      {
+        "name": "telegram_verified",
+        "ordinal": 5,
+        "type_info": "Integer"
+      },
+      {
+        "name": "signal_verified",
+        "ordinal": 6,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "1787139bffdfd15c1fc1f94cacfc914a2077c29a7b27c327eaa7aea8a0ba6b0f"
+}

@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT telegram_chat_id FROM users WHERE id = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "telegram_chat_id",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "a71a76724a3a7406e30a998c03d52554efaf649bb10b35b6e5d64ac59a479023"
+}

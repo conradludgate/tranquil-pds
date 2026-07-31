@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT secret_encrypted, encryption_version, verified FROM user_totp WHERE did = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "secret_encrypted",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "encryption_version",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "verified",
+        "ordinal": 2,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "2f675bf96916c9546b9dce1d0da71ba59256722b9750ec1da4747f3d82a2a00d"
+}

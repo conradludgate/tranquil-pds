@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE invite_codes SET disabled = TRUE\n                   WHERE created_by_user IN (SELECT id FROM users WHERE did = $1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "7e8945b52ac84070d0492a734680cd97f4b6307fd616b7310ee58e9c75d93cf4"
+}

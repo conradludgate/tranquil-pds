@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT session_id, user_agent, ip_address, last_seen_at\n            FROM oauth_device\n            WHERE id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "session_id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "user_agent",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "ip_address",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "last_seen_at",
+        "ordinal": 3,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "869540e943c22dbbfacd200782b9d723a21954025a7c82180b4d193ccefb9bab"
+}

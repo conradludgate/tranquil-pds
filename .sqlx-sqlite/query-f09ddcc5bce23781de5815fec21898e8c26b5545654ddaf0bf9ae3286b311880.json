@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO reserved_signing_keys (did, public_key_did_key, private_key_bytes, expires_at)\n               VALUES ($1, $2, $3, $4)\n               RETURNING id as \"id!: Vec<u8>\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!: Vec<u8>",
+        "ordinal": 0,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "f09ddcc5bce23781de5815fec21898e8c26b5545654ddaf0bf9ae3286b311880"
+}

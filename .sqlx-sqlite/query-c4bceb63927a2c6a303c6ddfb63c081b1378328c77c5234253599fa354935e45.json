@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT 1 as \"exists!: i64\"\n            FROM oauth_account_device ad\n            JOIN users u ON u.did = ad.did\n            WHERE ad.device_id = $1\n              AND ad.did = $2\n              AND u.deactivated_at IS NULL\n              AND u.takedown_ref IS NULL\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "exists!: i64",
+        "ordinal": 0,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "c4bceb63927a2c6a303c6ddfb63c081b1378328c77c5234253599fa354935e45"
+}

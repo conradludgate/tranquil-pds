@@ -1,0 +1,92 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT id as \"id!: i64\", did, access_jti, refresh_jti,\n                   CAST(access_expires_at AS TEXT) as \"access_expires_at!: String\",\n                   CAST(refresh_expires_at AS TEXT) as \"refresh_expires_at!: String\",\n                   legacy_login, mfa_verified, scope, controller_did, app_password_name,\n                   CAST(created_at AS TEXT) as \"created_at!: String\",\n                   CAST(updated_at AS TEXT) as \"updated_at!: String\"\n            FROM session_tokens\n            WHERE access_jti = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!: i64",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "did",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "access_jti",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "refresh_jti",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "access_expires_at!: String",
+        "ordinal": 4,
+        "type_info": "Null"
+      },
+      {
+        "name": "refresh_expires_at!: String",
+        "ordinal": 5,
+        "type_info": "Null"
+      },
+      {
+        "name": "legacy_login",
+        "ordinal": 6,
+        "type_info": "Integer"
+      },
+      {
+        "name": "mfa_verified",
+        "ordinal": 7,
+        "type_info": "Integer"
+      },
+      {
+        "name": "scope",
+        "ordinal": 8,
+        "type_info": "Text"
+      },
+      {
+        "name": "controller_did",
+        "ordinal": 9,
+        "type_info": "Text"
+      },
+      {
+        "name": "app_password_name",
+        "ordinal": 10,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at!: String",
+        "ordinal": 11,
+        "type_info": "Null"
+      },
+      {
+        "name": "updated_at!: String",
+        "ordinal": 12,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false,
+      null,
+      null,
+      false,
+      false,
+      true,
+      true,
+      true,
+      null,
+      null
+    ]
+  },
+  "hash": "1983b161c71c00c016a5bd2e53a3f881aa3b6038dfd6406bc52340829314cfd9"
+}

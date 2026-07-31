@@ -1,0 +1,44 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, did, preferred_comms_channel as \"preferred_comms_channel: CommsChannel\", recovery_token, recovery_token_expires_at FROM users WHERE did = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "did",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "preferred_comms_channel: CommsChannel",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "recovery_token",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "recovery_token_expires_at",
+        "ordinal": 4,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "85882f1c27888b695582395b798b8e4994ed1d761a598f938f2271e5ba320eea"
+}

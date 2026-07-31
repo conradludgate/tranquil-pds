@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT\n                u.id, u.did, u.handle, u.email,\n                u.preferred_comms_channel as \"channel: CommsChannel\",\n                u.discord_username, u.telegram_username, u.signal_username,\n                k.key_bytes, k.encryption_version\n            FROM users u\n            JOIN user_keys k ON u.id = k.user_id\n            WHERE u.did = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "did",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "handle",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "email",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "channel: CommsChannel",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "discord_username",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "telegram_username",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "signal_username",
+        "ordinal": 7,
+        "type_info": "Text"
+      },
+      {
+        "name": "key_bytes",
+        "ordinal": 8,
+        "type_info": "Blob"
+      },
+      {
+        "name": "encryption_version",
+        "ordinal": 9,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "c8657f67fdd3cc0fb40dfaabd5cde460d84ea1de18f620ee4ece2623ad153911"
+}

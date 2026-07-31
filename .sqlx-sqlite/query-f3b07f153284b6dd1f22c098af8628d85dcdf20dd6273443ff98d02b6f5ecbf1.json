@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, did, public_key_did_key, private_key_bytes, expires_at, used_at\n            FROM reserved_signing_keys WHERE public_key_did_key = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "did",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "public_key_did_key",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "private_key_bytes",
+        "ordinal": 3,
+        "type_info": "Blob"
+      },
+      {
+        "name": "expires_at",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "used_at",
+        "ordinal": 5,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      true,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "f3b07f153284b6dd1f22c098af8628d85dcdf20dd6273443ff98d02b6f5ecbf1"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO sso_auth_state (state, request_uri, provider, action, nonce, code_verifier, did)\n            VALUES ($1, $2, $3, $4, $5, $6, $7)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": []
+  },
+  "hash": "cdba2cc5219e52ee1c23d52c1e099b49b87e45dcfc6edb7a3e73067ed61b312b"
+}

@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT password_reset_code, password_reset_code_expires_at FROM users WHERE email = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "password_reset_code",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "password_reset_code_expires_at",
+        "ordinal": 1,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      true
+    ]
+  },
+  "hash": "f7af28963099aec12cf1d4f8a9a03699bb3a90f39bc9c4c0f738a37827e8f382"
+}

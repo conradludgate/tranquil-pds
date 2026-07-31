@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT available_uses FROM invite_codes WHERE code = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "available_uses",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "98ea591cbcdba1187a3d91c94b18fb36b62924e9ebded829535debad98fd95c7"
+}

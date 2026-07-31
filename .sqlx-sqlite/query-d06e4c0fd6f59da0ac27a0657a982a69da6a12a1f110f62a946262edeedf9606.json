@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT trusted_at, trusted_until FROM oauth_device od\n               JOIN oauth_account_device oad ON od.id = oad.device_id\n               WHERE od.id = $1 AND oad.did = $2",
+  "describe": {
+    "columns": [
+      {
+        "name": "trusted_at",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "trusted_until",
+        "ordinal": 1,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      true,
+      true
+    ]
+  },
+  "hash": "d06e4c0fd6f59da0ac27a0657a982a69da6a12a1f110f62a946262edeedf9606"
+}

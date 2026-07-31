@@ -79,7 +79,12 @@ webauthn-rs-proto = { workspace = true }
 bsky = ["bsky-support"]
 bsky-support = []
 external-infra = []
-postgres = ["tranquil-db/postgres"]
+postgres = [
+    "tranquil-db/postgres",
+    "tranquil-repo/postgres",
+    "tranquil-signal/postgres",
+]
+sqlite = ["tranquil-db/sqlite", "tranquil-signal/sqlite"]
 s3 = ["tranquil-storage/s3"]
 valkey = ["tranquil-cache/valkey"]
 frontend = []

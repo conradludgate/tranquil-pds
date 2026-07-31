@@ -1,0 +1,44 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT\n                   ic.code,\n                   ic.available_uses,\n                   ic.created_at,\n                   ic.disabled,\n                   ic.for_account\n               FROM invite_codes ic\n               WHERE ic.for_account = $1\n               ORDER BY ic.created_at DESC",
+  "describe": {
+    "columns": [
+      {
+        "name": "code",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "available_uses",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "disabled",
+        "ordinal": 3,
+        "type_info": "Integer"
+      },
+      {
+        "name": "for_account",
+        "ordinal": 4,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "c1a0b6402eb680e14fd6678565e0d4f64b45229110968d0c46e94c5ba9752080"
+}

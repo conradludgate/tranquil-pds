@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM signal_kyber_pre_keys WHERE id = $1 AND identity = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "eb837730e87ff990c4441d7bdab001d7542d1803702c634a6099365a9740e45a"
+}

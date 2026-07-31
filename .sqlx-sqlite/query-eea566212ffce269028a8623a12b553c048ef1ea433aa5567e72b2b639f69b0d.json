@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT MAX(id) FROM signal_kyber_pre_keys WHERE identity = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "MAX(id)",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "eea566212ffce269028a8623a12b553c048ef1ea433aa5567e72b2b639f69b0d"
+}

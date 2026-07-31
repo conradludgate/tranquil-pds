@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE comms_queue\n               SET status = 'failed',\n                   attempts = max_attempts,\n                   last_error = $2,\n                   updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')\n               WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "bfea610af2c1fffccf8b52fab3142d5cdd8a387b431614f4644e7f47b891642e"
+}

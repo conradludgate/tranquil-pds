@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO session_tokens\n                (did, access_jti, refresh_jti, access_expires_at, refresh_expires_at,\n                 legacy_login, mfa_verified, scope, controller_did, app_password_name)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)\n            RETURNING id as \"id!: i64\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!: i64",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 10
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "985549dfe36860c6eba3fe61e4e03d74fa7a785caacbb16cec490192bda93c49"
+}

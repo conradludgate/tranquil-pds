@@ -1,0 +1,68 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT\n                id as \"id!: Vec<u8>\",\n                delegated_did,\n                actor_did,\n                controller_did,\n                CAST(action_type AS TEXT) as \"action_type!: String\",\n                CAST(action_details AS TEXT) as \"action_details: String\",\n                ip_address,\n                user_agent,\n                CAST(created_at AS TEXT) as \"created_at!: String\"\n            FROM delegation_audit_log\n            WHERE delegated_did = $1\n            ORDER BY created_at DESC\n            LIMIT $2 OFFSET $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!: Vec<u8>",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "delegated_did",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "actor_did",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "controller_did",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "action_type!: String",
+        "ordinal": 4,
+        "type_info": "Null"
+      },
+      {
+        "name": "action_details: String",
+        "ordinal": 5,
+        "type_info": "Null"
+      },
+      {
+        "name": "ip_address",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "user_agent",
+        "ordinal": 7,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at!: String",
+        "ordinal": 8,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      true,
+      null,
+      null,
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "d36d8caa6ab4dfcd6f4971f6b58ad2c50323e0544ce67dcda9cb5704b1169edd"
+}

@@ -1,0 +1,68 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, did, handle, email, created_at, deactivated_at, takedown_ref, is_admin, inbound_migration\n               FROM users WHERE did = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "did",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "handle",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "email",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "deactivated_at",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "takedown_ref",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "is_admin",
+        "ordinal": 7,
+        "type_info": "Integer"
+      },
+      {
+        "name": "inbound_migration",
+        "ordinal": 8,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "f1c4ec28b02d09ffce35aa8249c1747a70c12a3ecfc1ff6ca1847840f770db2f"
+}

@@ -1,0 +1,56 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT email, handle, preferred_comms_channel as \"preferred_channel!: CommsChannel\", preferred_locale, telegram_chat_id, discord_id, signal_username\n               FROM users WHERE id = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "email",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "handle",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "preferred_channel!: CommsChannel",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "preferred_locale",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "telegram_chat_id",
+        "ordinal": 4,
+        "type_info": "Integer"
+      },
+      {
+        "name": "discord_id",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "signal_username",
+        "ordinal": 6,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "b8829a4375f55ff7f357ceab94d1ea1087f284b66fc814e7c4742c0a54f78020"
+}

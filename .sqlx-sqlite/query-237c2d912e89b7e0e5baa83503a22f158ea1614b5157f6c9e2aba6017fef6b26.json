@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT t.token, t.expires_at\n            FROM plc_operation_tokens t\n            JOIN users u ON t.user_id = u.id\n            WHERE u.did = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "token",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "expires_at",
+        "ordinal": 1,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "237c2d912e89b7e0e5baa83503a22f158ea1614b5157f6c9e2aba6017fef6b26"
+}

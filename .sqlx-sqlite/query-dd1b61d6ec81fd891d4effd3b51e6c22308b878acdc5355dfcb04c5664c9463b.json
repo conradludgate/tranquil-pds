@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT storage_key, mime_type, size_bytes FROM blobs WHERE cid = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "storage_key",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "mime_type",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "size_bytes",
+        "ordinal": 2,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "dd1b61d6ec81fd891d4effd3b51e6c22308b878acdc5355dfcb04c5664c9463b"
+}

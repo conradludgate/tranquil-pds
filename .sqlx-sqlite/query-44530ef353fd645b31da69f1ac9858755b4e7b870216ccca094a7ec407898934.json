@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT email_verified FROM users WHERE did = $1 OR email = $1 OR handle = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "email_verified",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "44530ef353fd645b31da69f1ac9858755b4e7b870216ccca094a7ec407898934"
+}

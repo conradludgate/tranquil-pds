@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "WITH total AS (\n                SELECT COUNT(*) AS cnt FROM signal_kyber_pre_keys\n                WHERE identity = $1 AND is_last_resort = FALSE\n            )\n            DELETE FROM signal_kyber_pre_keys\n            WHERE identity = $1 AND is_last_resort = FALSE\n              AND stale_at IS NOT NULL AND stale_at < $2\n              AND (SELECT cnt FROM total) > $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "c30d8f2bb8a20154b565a93108d3871289a752fb8d0de35a2164619da2c03aa0"
+}

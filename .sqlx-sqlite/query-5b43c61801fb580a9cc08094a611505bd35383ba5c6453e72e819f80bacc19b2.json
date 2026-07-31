@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT\n                email,\n                preferred_comms_channel as \"preferred_channel!: CommsChannel\",\n                discord_id,\n                discord_username,\n                discord_verified,\n                telegram_username,\n                telegram_verified,\n                telegram_chat_id,\n                signal_username,\n                signal_verified\n            FROM users WHERE did = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "email",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "preferred_channel!: CommsChannel",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "discord_id",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "discord_username",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "discord_verified",
+        "ordinal": 4,
+        "type_info": "Integer"
+      },
+      {
+        "name": "telegram_username",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "telegram_verified",
+        "ordinal": 6,
+        "type_info": "Integer"
+      },
+      {
+        "name": "telegram_chat_id",
+        "ordinal": 7,
+        "type_info": "Integer"
+      },
+      {
+        "name": "signal_username",
+        "ordinal": 8,
+        "type_info": "Text"
+      },
+      {
+        "name": "signal_verified",
+        "ordinal": 9,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      true,
+      true,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "5b43c61801fb580a9cc08094a611505bd35383ba5c6453e72e819f80bacc19b2"
+}

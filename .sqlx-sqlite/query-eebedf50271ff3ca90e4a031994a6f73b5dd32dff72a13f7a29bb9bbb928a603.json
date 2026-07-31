@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            DELETE FROM oauth_authorization_request\n            WHERE code = $1\n            RETURNING did, device_id, client_id, client_auth, parameters, expires_at, code, controller_did\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "did",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "device_id",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "client_id",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "client_auth",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "parameters",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "expires_at",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "code",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "controller_did",
+        "ordinal": 7,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      true,
+      false,
+      true,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "eebedf50271ff3ca90e4a031994a6f73b5dd32dff72a13f7a29bb9bbb928a603"
+}

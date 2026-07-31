@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE account_deletion_requests SET expires_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') - '-1 hour' WHERE token = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "dbe520fd31720edaf6c1454ee742716f2a1f2380b619298015012de62668722f"
+}

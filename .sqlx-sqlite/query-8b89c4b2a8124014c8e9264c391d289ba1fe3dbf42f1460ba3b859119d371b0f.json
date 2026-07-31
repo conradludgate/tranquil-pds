@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE comms_queue\n               SET\n                   status = CASE\n                       WHEN attempts + 1 >= max_attempts THEN 'failed'\n                       ELSE 'pending'\n                   END,\n                   attempts = attempts + 1,\n                   last_error = $2,\n                   updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),\n                   scheduled_for = datetime('now', printf('+%d minutes', attempts + 1))\n               WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "8b89c4b2a8124014c8e9264c391d289ba1fe3dbf42f1460ba3b859119d371b0f"
+}

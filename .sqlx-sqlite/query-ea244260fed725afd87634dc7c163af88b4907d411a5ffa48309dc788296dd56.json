@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT id, did, handle\n            FROM users\n            WHERE delete_after IS NOT NULL\n              AND delete_after < strftime('%Y-%m-%dT%H:%M:%fZ', 'now')\n              AND deactivated_at IS NOT NULL\n            LIMIT $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "did",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "handle",
+        "ordinal": 2,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "ea244260fed725afd87634dc7c163af88b4907d411a5ffa48309dc788296dd56"
+}

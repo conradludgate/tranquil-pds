@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT password_hash IS NOT NULL as \"has_password!: i64\" FROM users WHERE did = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "has_password!: i64",
+        "ordinal": 0,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "1e208793ed301688e8331479e537ff1adcf3e5c85b74da0f7f6cf0c2c0d3ecc9"
+}

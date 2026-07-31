@@ -1,0 +1,1300 @@
+use async_trait::async_trait;
+use chrono::{DateTime, Utc};
+use sqlx::SqlitePool;
+use tranquil_db_traits::{
+    AdminAccountInfo, CommsChannel, CommsStatus, CommsType, DbError, DeletionRequest,
+    DeletionRequestWithToken, InfraRepository, InviteCodeError, InviteCodeInfo, InviteCodeRow,
+    InviteCodeSortOrder, InviteCodeState, InviteCodeUse, NotificationHistoryRow, PlcTokenInfo,
+    QueuedComms, ReservedSigningKey, ReservedSigningKeyFull, ValidatedInviteCode,
+};
+use tranquil_types::{CidLink, Did, InviteCode};
+use uuid::Uuid;
+
+use super::col;
+use super::map_sqlite_error;
+use super::{column, legacy_column, opt_column};
+
+pub struct SqliteInfraRepository {
+    pool: SqlitePool,
+}
+
+impl SqliteInfraRepository {
+    pub fn new(pool: SqlitePool) -> Self {
+        Self { pool }
+    }
+}
+
+fn parse_timestamp(value: String) -> Result<DateTime<Utc>, DbError> {
+    DateTime::parse_from_rfc3339(&value)
+        .map(|value| value.with_timezone(&Utc))
+        .map_err(|error| DbError::Other(format!("invalid SQLite timestamp {value:?}: {error}")))
+}
+
+fn parse_optional_timestamp(value: Option<String>) -> Result<Option<DateTime<Utc>>, DbError> {
+    value.map(parse_timestamp).transpose()
+}
+
+fn parse_uuid(value: Vec<u8>) -> Result<Uuid, DbError> {
+    Uuid::from_slice(&value)
+        .map_err(|error| DbError::Other(format!("invalid SQLite UUID: {error}")))
+}
+
+fn parse_i32(value: i64) -> Result<i32, DbError> {
+    i32::try_from(value).map_err(|error| DbError::Other(format!("integer out of range: {error}")))
+}
+
+fn parse_json(value: String) -> Result<serde_json::Value, DbError> {
+    serde_json::from_str(&value)
+        .map_err(|error| DbError::Other(format!("invalid SQLite JSON: {error}")))
+}
+
+#[async_trait]
+impl InfraRepository for SqliteInfraRepository {
+    async fn enqueue_comms(
+        &self,
+        user_id: Option<Uuid>,
+        channel: CommsChannel,
+        comms_type: CommsType,
+        recipient: &str,
+        subject: Option<&str>,
+        body: &str,
+        metadata: Option<serde_json::Value>,
+    ) -> Result<Uuid, DbError> {
+        let channel = channel as CommsChannel;
+        let comms_type = comms_type as CommsType;
+        let id = sqlx::query_scalar!(
+            r#"INSERT INTO comms_queue
+               (user_id, channel, comms_type, recipient, subject, body, metadata)
+               VALUES ($1, $2, $3, $4, $5, $6, $7)
+               RETURNING id as "id!: Vec<u8>""#,
+            user_id,
+            channel,
+            comms_type,
+            recipient,
+            subject,
+            body,
+            metadata
+        )
+        .fetch_one(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        parse_uuid(id)
+    }
+
+    async fn fetch_pending_comms(
+        &self,
+        now: DateTime<Utc>,
+        batch_size: i64,
+    ) -> Result<Vec<QueuedComms>, DbError> {
+        let results = sqlx::query_as_unchecked!(
+            QueuedComms,
+            r#"UPDATE comms_queue
+               SET status = 'processing', updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+               WHERE id IN (
+                   SELECT id FROM comms_queue
+                   WHERE attempts < max_attempts
+                     AND scheduled_for <= $1
+                     AND (
+                         status = 'pending'
+                         OR (status = 'processing'
+                             AND updated_at < datetime($1, '-10 minutes'))
+                     )
+                   ORDER BY scheduled_for ASC
+                   LIMIT $2
+                  
+               )
+               RETURNING
+                   id, user_id,
+                   channel as "channel: CommsChannel",
+                   comms_type as "comms_type: CommsType",
+                   status as "status: CommsStatus",
+                   recipient, subject, body, metadata,
+                   attempts, max_attempts, last_error,
+                   created_at, updated_at, scheduled_for, processed_at"#,
+            now,
+            batch_size
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(results)
+    }
+
+    async fn mark_comms_sent(&self, id: Uuid) -> Result<(), DbError> {
+        sqlx::query!(
+            r#"UPDATE comms_queue
+               SET status = 'sent', processed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+               WHERE id = $1"#,
+            id
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(())
+    }
+
+    async fn mark_comms_failed(&self, id: Uuid, error: &str) -> Result<(), DbError> {
+        sqlx::query!(
+            r#"UPDATE comms_queue
+               SET
+                   status = CASE
+                       WHEN attempts + 1 >= max_attempts THEN 'failed'
+                       ELSE 'pending'
+                   END,
+                   attempts = attempts + 1,
+                   last_error = $2,
+                   updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+                   scheduled_for = datetime('now', printf('+%d minutes', attempts + 1))
+               WHERE id = $1"#,
+            id,
+            error
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(())
+    }
+
+    async fn mark_comms_failed_permanent(&self, id: Uuid, error: &str) -> Result<(), DbError> {
+        sqlx::query!(
+            r#"UPDATE comms_queue
+               SET status = 'failed',
+                   attempts = max_attempts,
+                   last_error = $2,
+                   updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+               WHERE id = $1"#,
+            id,
+            error
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(())
+    }
+
+    async fn create_invite_code(
+        &self,
+        code: &InviteCode,
+        use_count: i32,
+        for_account: &Did,
+    ) -> Result<bool, DbError> {
+        let for_account_str = for_account.as_str();
+        let code_str = code.as_str();
+        let result = sqlx::query!(
+            r#"INSERT INTO invite_codes (code, available_uses, created_by_user, for_account)
+               SELECT $1, $2, id, $3 FROM users WHERE is_admin = true LIMIT 1"#,
+            code_str,
+            use_count,
+            for_account_str
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(result.rows_affected() > 0)
+    }
+
+    async fn create_invite_codes_batch(
+        &self,
+        codes: &[InviteCode],
+        use_count: i32,
+        created_by_user: Uuid,
+        for_account: &Did,
+    ) -> Result<(), DbError> {
+        let for_account_str = for_account.as_str().to_owned();
+        for code in codes {
+            let code_string = code.to_string();
+            sqlx::query!(
+                r#"INSERT INTO invite_codes (code, available_uses, created_by_user, for_account)
+                   VALUES ($1, $2, $3, $4)"#,
+                code_string,
+                use_count,
+                created_by_user,
+                for_account_str
+            )
+            .execute(&self.pool)
+            .await
+            .map_err(map_sqlite_error)?;
+        }
+
+        Ok(())
+    }
+
+    async fn get_invite_code_available_uses(
+        &self,
+        code: &InviteCode,
+    ) -> Result<Option<i32>, DbError> {
+        let code_str = code.as_str();
+        let result = sqlx::query_scalar!(
+            "SELECT available_uses FROM invite_codes WHERE code = $1",
+            code_str
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        result.map(parse_i32).transpose()
+    }
+
+    async fn validate_invite_code<'a>(
+        &self,
+        code: &'a InviteCode,
+    ) -> Result<ValidatedInviteCode<'a>, InviteCodeError> {
+        let code_str = code.as_str();
+        let result = sqlx::query!(
+            r#"SELECT available_uses, COALESCE(disabled, 0) as "disabled!: i64" FROM invite_codes WHERE code = $1"#,
+            code_str
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|e| InviteCodeError::DatabaseError(map_sqlite_error(e)))?;
+
+        match result {
+            None => Err(InviteCodeError::NotFound),
+            Some(row) if row.disabled != 0 => Err(InviteCodeError::Disabled),
+            Some(row) if row.available_uses <= 0 => Err(InviteCodeError::ExhaustedUses),
+            Some(_) => Ok(ValidatedInviteCode::new_validated(code)),
+        }
+    }
+
+    async fn get_invite_codes_for_account(
+        &self,
+        for_account: &Did,
+    ) -> Result<Vec<InviteCodeInfo>, DbError> {
+        let for_account_str = for_account.as_str();
+        let results = sqlx::query!(
+            r#"SELECT
+                   ic.code,
+                   ic.available_uses,
+                   ic.created_at,
+                   ic.disabled,
+                   ic.for_account
+               FROM invite_codes ic
+               WHERE ic.for_account = $1
+               ORDER BY ic.created_at DESC"#,
+            for_account_str
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        results
+            .into_iter()
+            .map(|r| {
+                Ok(InviteCodeInfo {
+                    code: InviteCode::from(r.code.unwrap_or_default()),
+                    available_uses: parse_i32(r.available_uses)?,
+                    state: InviteCodeState::from_optional_disabled_flag(r.disabled.map(|v| v != 0)),
+                    for_account: legacy_column(r.for_account, col::INVITE_CODES_FOR_ACCOUNT),
+                    created_at: parse_timestamp(r.created_at)?,
+                    created_by: None,
+                })
+            })
+            .collect()
+    }
+
+    async fn get_invite_code_uses(&self, code: &InviteCode) -> Result<Vec<InviteCodeUse>, DbError> {
+        let code_str = code.as_str();
+        let results = sqlx::query!(
+            r#"SELECT u.did, u.handle, icu.used_at
+               FROM invite_code_uses icu
+               JOIN users u ON icu.used_by_user = u.id
+               WHERE icu.code = $1
+               ORDER BY icu.used_at DESC"#,
+            code_str
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(results
+            .into_iter()
+            .filter_map(|r| {
+                Some(InviteCodeUse {
+                    code: code.clone(),
+                    used_by_did: legacy_column(r.did, col::USERS_DID)?,
+                    used_by_handle: legacy_column(r.handle, col::USERS_HANDLE),
+                    used_at: parse_timestamp(r.used_at).ok()?,
+                })
+            })
+            .collect())
+    }
+
+    async fn disable_invite_codes_by_code(&self, codes: &[InviteCode]) -> Result<(), DbError> {
+        for code in codes {
+            let code_value = code.to_string();
+            sqlx::query!(
+                "UPDATE invite_codes SET disabled = TRUE WHERE code = $1",
+                code_value
+            )
+            .execute(&self.pool)
+            .await
+            .map_err(map_sqlite_error)?;
+        }
+
+        Ok(())
+    }
+
+    async fn disable_invite_codes_by_account(&self, accounts: &[Did]) -> Result<(), DbError> {
+        for account in accounts {
+            let did = account.as_str().to_owned();
+            sqlx::query!(
+                r#"UPDATE invite_codes SET disabled = TRUE
+                   WHERE created_by_user IN (SELECT id FROM users WHERE did = $1)"#,
+                did
+            )
+            .execute(&self.pool)
+            .await
+            .map_err(map_sqlite_error)?;
+        }
+
+        Ok(())
+    }
+
+    async fn list_invite_codes(
+        &self,
+        cursor: Option<&str>,
+        limit: i64,
+        sort: InviteCodeSortOrder,
+    ) -> Result<Vec<InviteCodeRow>, DbError> {
+        fn to_row(
+            code: Option<String>,
+            available_uses: i64,
+            disabled: Option<i64>,
+            created_by_user: Vec<u8>,
+            created_at: String,
+        ) -> Result<InviteCodeRow, DbError> {
+            Ok(InviteCodeRow {
+                code: InviteCode::from(code.unwrap_or_default()),
+                available_uses: parse_i32(available_uses)?,
+                disabled: disabled.map(|value| value != 0),
+                created_by_user: parse_uuid(created_by_user)?,
+                created_at: parse_timestamp(created_at)?,
+            })
+        }
+
+        let results: Vec<Result<InviteCodeRow, DbError>> = match (cursor, sort) {
+            (Some(cursor_code), InviteCodeSortOrder::Recent) => sqlx::query!(
+                r#"SELECT ic.code, ic.available_uses, ic.disabled, ic.created_by_user, ic.created_at
+                       FROM invite_codes ic
+                       WHERE ic.created_at < (SELECT created_at FROM invite_codes WHERE code = $1)
+                       ORDER BY created_at DESC
+                       LIMIT $2"#,
+                cursor_code,
+                limit
+            )
+            .fetch_all(&self.pool)
+            .await
+            .map_err(map_sqlite_error)?
+            .into_iter()
+            .map(|r| {
+                to_row(
+                    r.code,
+                    r.available_uses,
+                    r.disabled,
+                    r.created_by_user,
+                    r.created_at,
+                )
+            })
+            .collect(),
+            (None, InviteCodeSortOrder::Recent) => sqlx::query!(
+                r#"SELECT ic.code, ic.available_uses, ic.disabled, ic.created_by_user, ic.created_at
+                       FROM invite_codes ic
+                       ORDER BY created_at DESC
+                       LIMIT $1"#,
+                limit
+            )
+            .fetch_all(&self.pool)
+            .await
+            .map_err(map_sqlite_error)?
+            .into_iter()
+            .map(|r| {
+                to_row(
+                    r.code,
+                    r.available_uses,
+                    r.disabled,
+                    r.created_by_user,
+                    r.created_at,
+                )
+            })
+            .collect(),
+            (Some(cursor_code), InviteCodeSortOrder::Usage) => sqlx::query!(
+                r#"SELECT ic.code, ic.available_uses, ic.disabled, ic.created_by_user, ic.created_at
+                       FROM invite_codes ic
+                       WHERE ic.created_at < (SELECT created_at FROM invite_codes WHERE code = $1)
+                       ORDER BY available_uses DESC
+                       LIMIT $2"#,
+                cursor_code,
+                limit
+            )
+            .fetch_all(&self.pool)
+            .await
+            .map_err(map_sqlite_error)?
+            .into_iter()
+            .map(|r| {
+                to_row(
+                    r.code,
+                    r.available_uses,
+                    r.disabled,
+                    r.created_by_user,
+                    r.created_at,
+                )
+            })
+            .collect(),
+            (None, InviteCodeSortOrder::Usage) => sqlx::query!(
+                r#"SELECT ic.code, ic.available_uses, ic.disabled, ic.created_by_user, ic.created_at
+                       FROM invite_codes ic
+                       ORDER BY available_uses DESC
+                       LIMIT $1"#,
+                limit
+            )
+            .fetch_all(&self.pool)
+            .await
+            .map_err(map_sqlite_error)?
+            .into_iter()
+            .map(|r| {
+                to_row(
+                    r.code,
+                    r.available_uses,
+                    r.disabled,
+                    r.created_by_user,
+                    r.created_at,
+                )
+            })
+            .collect(),
+        };
+
+        results.into_iter().collect()
+    }
+
+    async fn get_user_dids_by_ids(&self, user_ids: &[Uuid]) -> Result<Vec<(Uuid, Did)>, DbError> {
+        let mut results = Vec::new();
+        for user_id in user_ids {
+            if let Some(row) = sqlx::query!("SELECT did FROM users WHERE id = $1", user_id)
+                .fetch_optional(&self.pool)
+                .await
+                .map_err(map_sqlite_error)?
+            {
+                results.push((*user_id, column(row.did, col::USERS_DID)?));
+            }
+        }
+        Ok(results)
+    }
+
+    async fn get_invite_code_uses_batch(
+        &self,
+        codes: &[InviteCode],
+    ) -> Result<Vec<InviteCodeUse>, DbError> {
+        let mut results = Vec::new();
+        for code in codes {
+            results.extend(self.get_invite_code_uses(code).await?);
+        }
+        results.sort_by(|left, right| right.used_at.cmp(&left.used_at));
+        Ok(results)
+    }
+
+    async fn get_invites_created_by_user(
+        &self,
+        user_id: Uuid,
+    ) -> Result<Vec<InviteCodeInfo>, DbError> {
+        let results = sqlx::query!(
+            r#"SELECT ic.code, ic.available_uses, ic.disabled, ic.for_account, ic.created_at, u.did as created_by
+               FROM invite_codes ic
+               JOIN users u ON ic.created_by_user = u.id
+               WHERE ic.created_by_user = $1"#,
+            user_id
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        results
+            .into_iter()
+            .map(|r| {
+                Ok(InviteCodeInfo {
+                    code: InviteCode::from(r.code.unwrap_or_default()),
+                    available_uses: parse_i32(r.available_uses)?,
+                    state: InviteCodeState::from_optional_disabled_flag(r.disabled.map(|v| v != 0)),
+                    for_account: legacy_column(r.for_account, col::INVITE_CODES_FOR_ACCOUNT),
+                    created_at: parse_timestamp(r.created_at)?,
+                    created_by: Some(column(r.created_by, col::USERS_DID)?),
+                })
+            })
+            .collect()
+    }
+
+    async fn get_invite_code_info(
+        &self,
+        code: &InviteCode,
+    ) -> Result<Option<InviteCodeInfo>, DbError> {
+        let code_str = code.as_str();
+        let result = sqlx::query!(
+            r#"SELECT ic.code, ic.available_uses, ic.disabled, ic.for_account, ic.created_at, u.did as created_by
+               FROM invite_codes ic
+               JOIN users u ON ic.created_by_user = u.id
+               WHERE ic.code = $1"#,
+            code_str
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        result
+            .map(|r| {
+                Ok(InviteCodeInfo {
+                    code: InviteCode::from(r.code.unwrap_or_default()),
+                    available_uses: parse_i32(r.available_uses)?,
+                    state: InviteCodeState::from_optional_disabled_flag(r.disabled.map(|v| v != 0)),
+                    for_account: legacy_column(r.for_account, col::INVITE_CODES_FOR_ACCOUNT),
+                    created_at: parse_timestamp(r.created_at)?,
+                    created_by: Some(column(r.created_by, col::USERS_DID)?),
+                })
+            })
+            .transpose()
+    }
+
+    async fn get_invite_codes_by_users(
+        &self,
+        user_ids: &[Uuid],
+    ) -> Result<Vec<(Uuid, InviteCodeInfo)>, DbError> {
+        let mut results = Vec::new();
+        for user_id in user_ids {
+            results.extend(
+                self.get_invites_created_by_user(*user_id)
+                    .await?
+                    .into_iter()
+                    .map(|invite| (*user_id, invite)),
+            );
+        }
+        Ok(results)
+    }
+
+    async fn get_invite_code_used_by_user(
+        &self,
+        user_id: Uuid,
+    ) -> Result<Option<InviteCode>, DbError> {
+        let result = sqlx::query_scalar!(
+            "SELECT code FROM invite_code_uses WHERE used_by_user = $1",
+            user_id
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(result.map(InviteCode::from))
+    }
+
+    async fn delete_invite_code_uses_by_user(&self, user_id: Uuid) -> Result<(), DbError> {
+        sqlx::query!(
+            "DELETE FROM invite_code_uses WHERE used_by_user = $1",
+            user_id
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(())
+    }
+
+    async fn delete_invite_codes_by_user(&self, user_id: Uuid) -> Result<(), DbError> {
+        sqlx::query!(
+            "DELETE FROM invite_codes WHERE created_by_user = $1",
+            user_id
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(())
+    }
+
+    async fn reserve_signing_key(
+        &self,
+        did: Option<&Did>,
+        public_key_did_key: &Did,
+        private_key_bytes: &[u8],
+        expires_at: DateTime<Utc>,
+    ) -> Result<Uuid, DbError> {
+        let did_str = did.map(|d| d.as_str());
+        let public_key = public_key_did_key.as_str();
+        let id = sqlx::query_scalar!(
+            r#"INSERT INTO reserved_signing_keys (did, public_key_did_key, private_key_bytes, expires_at)
+               VALUES ($1, $2, $3, $4)
+               RETURNING id as "id!: Vec<u8>""#,
+            did_str,
+            public_key,
+            private_key_bytes,
+            expires_at
+        )
+        .fetch_one(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        parse_uuid(id)
+    }
+
+    async fn get_reserved_signing_key(
+        &self,
+        public_key_did_key: &Did,
+    ) -> Result<Option<ReservedSigningKey>, DbError> {
+        let public_key = public_key_did_key.as_str();
+        let result = sqlx::query!(
+            r#"SELECT id, private_key_bytes
+               FROM reserved_signing_keys
+               WHERE public_key_did_key = $1
+                 AND used_at IS NULL
+                 AND expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+              "#,
+            public_key
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        result
+            .map(|r| {
+                Ok(ReservedSigningKey {
+                    id: parse_uuid(r.id.unwrap_or_default())?,
+                    private_key_bytes: r.private_key_bytes,
+                })
+            })
+            .transpose()
+    }
+
+    async fn mark_signing_key_used(&self, key_id: Uuid) -> Result<(), DbError> {
+        sqlx::query!(
+            "UPDATE reserved_signing_keys SET used_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE id = $1",
+            key_id
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(())
+    }
+
+    async fn create_deletion_request(
+        &self,
+        token: &str,
+        did: &Did,
+        expires_at: DateTime<Utc>,
+    ) -> Result<(), DbError> {
+        let did_str = did.as_str();
+        sqlx::query!(
+            "INSERT INTO account_deletion_requests (token, did, expires_at) VALUES ($1, $2, $3)",
+            token,
+            did_str,
+            expires_at
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(())
+    }
+
+    async fn get_deletion_request(&self, token: &str) -> Result<Option<DeletionRequest>, DbError> {
+        let result = sqlx::query!(
+            "SELECT did, expires_at FROM account_deletion_requests WHERE token = $1",
+            token
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        result
+            .map(|r| {
+                Ok(DeletionRequest {
+                    did: column(r.did, col::ACCOUNT_DELETION_REQUESTS_DID)?,
+                    expires_at: parse_timestamp(r.expires_at)?,
+                })
+            })
+            .transpose()
+    }
+
+    async fn delete_deletion_request(&self, token: &str) -> Result<(), DbError> {
+        sqlx::query!(
+            "DELETE FROM account_deletion_requests WHERE token = $1",
+            token
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(())
+    }
+
+    async fn delete_deletion_requests_by_did(&self, did: &Did) -> Result<(), DbError> {
+        let did_str = did.as_str();
+        sqlx::query!(
+            "DELETE FROM account_deletion_requests WHERE did = $1",
+            did_str
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(())
+    }
+
+    async fn upsert_account_preference(
+        &self,
+        user_id: Uuid,
+        name: &str,
+        value_json: serde_json::Value,
+    ) -> Result<(), DbError> {
+        let mut tx = self.pool.begin().await.map_err(map_sqlite_error)?;
+
+        sqlx::query!(
+            r#"DELETE FROM account_preferences WHERE user_id = $1 AND name = $2"#,
+            user_id,
+            name
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        sqlx::query!(
+            r#"INSERT INTO account_preferences (user_id, name, value_json) VALUES ($1, $2, $3)"#,
+            user_id,
+            name,
+            value_json
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        tx.commit().await.map_err(map_sqlite_error)?;
+
+        Ok(())
+    }
+
+    async fn insert_account_preference_if_not_exists(
+        &self,
+        user_id: Uuid,
+        name: &str,
+        value_json: serde_json::Value,
+    ) -> Result<(), DbError> {
+        sqlx::query!(
+            r#"INSERT INTO account_preferences (user_id, name, value_json)
+               SELECT $1, $2, $3
+               WHERE NOT EXISTS (
+                   SELECT 1 FROM account_preferences WHERE user_id = $1 AND name = $2
+               )"#,
+            user_id,
+            name,
+            value_json
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(())
+    }
+
+    async fn get_server_config(&self, key: &str) -> Result<Option<String>, DbError> {
+        let row = sqlx::query_scalar!("SELECT value FROM server_config WHERE key = $1", key)
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(map_sqlite_error)?;
+        Ok(row)
+    }
+
+    async fn health_check(&self) -> Result<bool, DbError> {
+        sqlx::query_scalar!("SELECT 1 as one")
+            .fetch_one(&self.pool)
+            .await
+            .map_err(map_sqlite_error)?;
+        Ok(true)
+    }
+
+    async fn insert_report(
+        &self,
+        id: i64,
+        reason_type: &str,
+        reason: Option<&str>,
+        subject_json: serde_json::Value,
+        reported_by_did: &Did,
+        created_at: DateTime<Utc>,
+    ) -> Result<(), DbError> {
+        let reported_by = reported_by_did.as_str();
+        sqlx::query!(
+            "INSERT INTO reports (id, reason_type, reason, subject_json, reported_by_did, created_at) VALUES ($1, $2, $3, $4, $5, $6)",
+            id,
+            reason_type,
+            reason,
+            subject_json,
+            reported_by,
+            created_at
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(())
+    }
+
+    async fn delete_plc_tokens_for_user(&self, user_id: Uuid) -> Result<(), DbError> {
+        sqlx::query!(
+            "DELETE FROM plc_operation_tokens WHERE user_id = $1 OR expires_at < strftime('%Y-%m-%dT%H:%M:%fZ', 'now')",
+            user_id
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(())
+    }
+
+    async fn insert_plc_token(
+        &self,
+        user_id: Uuid,
+        token: &str,
+        expires_at: DateTime<Utc>,
+    ) -> Result<(), DbError> {
+        sqlx::query!(
+            "INSERT INTO plc_operation_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)",
+            user_id,
+            token,
+            expires_at
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(())
+    }
+
+    async fn get_plc_token_expiry(
+        &self,
+        user_id: Uuid,
+        token: &str,
+    ) -> Result<Option<DateTime<Utc>>, DbError> {
+        let expiry = sqlx::query_scalar!(
+            "SELECT expires_at FROM plc_operation_tokens WHERE user_id = $1 AND token = $2",
+            user_id,
+            token
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        parse_optional_timestamp(expiry)
+    }
+
+    async fn delete_plc_token(&self, user_id: Uuid, token: &str) -> Result<(), DbError> {
+        sqlx::query!(
+            "DELETE FROM plc_operation_tokens WHERE user_id = $1 AND token = $2",
+            user_id,
+            token
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(())
+    }
+
+    async fn get_account_preferences(
+        &self,
+        user_id: Uuid,
+    ) -> Result<Vec<(String, serde_json::Value)>, DbError> {
+        let rows = sqlx::query!(
+            "SELECT name, value_json FROM account_preferences WHERE user_id = $1",
+            user_id
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        rows.into_iter()
+            .map(|r| Ok((r.name, parse_json(r.value_json)?)))
+            .collect()
+    }
+
+    async fn replace_namespace_preferences(
+        &self,
+        user_id: Uuid,
+        namespace: &str,
+        preferences: Vec<(String, serde_json::Value)>,
+    ) -> Result<(), DbError> {
+        let mut tx = self.pool.begin().await.map_err(map_sqlite_error)?;
+
+        let like_pattern = format!("{}.%", namespace);
+        sqlx::query!(
+            "DELETE FROM account_preferences WHERE user_id = $1 AND (name = $2 OR name LIKE $3)",
+            user_id,
+            namespace,
+            like_pattern
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        for (name, value_json) in preferences {
+            sqlx::query!(
+                "INSERT INTO account_preferences (user_id, name, value_json) VALUES ($1, $2, $3)",
+                user_id,
+                name,
+                value_json
+            )
+            .execute(&mut *tx)
+            .await
+            .map_err(map_sqlite_error)?;
+        }
+
+        tx.commit().await.map_err(map_sqlite_error)?;
+
+        Ok(())
+    }
+
+    async fn get_notification_history(
+        &self,
+        user_id: Uuid,
+        limit: i64,
+    ) -> Result<Vec<NotificationHistoryRow>, DbError> {
+        let rows = sqlx::query!(
+            r#"
+            SELECT
+                created_at,
+                channel as "channel: CommsChannel",
+                comms_type as "comms_type: CommsType",
+                status as "status: CommsStatus",
+                subject,
+                body
+            FROM comms_queue
+            WHERE user_id = $1
+            ORDER BY created_at DESC
+            LIMIT $2
+            "#,
+            user_id,
+            limit
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+        rows.into_iter()
+            .map(|r| {
+                Ok(NotificationHistoryRow {
+                    created_at: parse_timestamp(r.created_at)?,
+                    channel: r.channel,
+                    comms_type: r.comms_type,
+                    status: r.status,
+                    subject: r.subject,
+                    body: r.body,
+                })
+            })
+            .collect()
+    }
+
+    async fn get_server_configs(&self, keys: &[&str]) -> Result<Vec<(String, String)>, DbError> {
+        let keys_vec: Vec<String> = keys.iter().map(|s| s.to_string()).collect();
+        if keys_vec.is_empty() {
+            return Ok(Vec::new());
+        }
+        let placeholders = std::iter::repeat_n("?", keys_vec.len())
+            .collect::<Vec<_>>()
+            .join(",");
+        let statement =
+            format!("SELECT key, value FROM server_config WHERE key IN ({placeholders})");
+        let mut query = sqlx::query_as::<_, (String, String)>(&statement);
+        for key in &keys_vec {
+            query = query.bind(key);
+        }
+        let rows = query
+            .fetch_all(&self.pool)
+            .await
+            .map_err(map_sqlite_error)?;
+
+        Ok(rows)
+    }
+
+    async fn upsert_server_config(&self, key: &str, value: &str) -> Result<(), DbError> {
+        sqlx::query(
+            "INSERT INTO server_config (key, value, updated_at) VALUES ($1, $2, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+             ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')",
+        )
+        .bind(key)
+        .bind(value)
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(())
+    }
+
+    async fn delete_server_config(&self, key: &str) -> Result<(), DbError> {
+        sqlx::query("DELETE FROM server_config WHERE key = $1")
+            .bind(key)
+            .execute(&self.pool)
+            .await
+            .map_err(map_sqlite_error)?;
+
+        Ok(())
+    }
+
+    async fn get_blob_storage_key_by_cid(&self, cid: &CidLink) -> Result<Option<String>, DbError> {
+        let cid_str = cid.as_str();
+        let result = sqlx::query_scalar!("SELECT storage_key FROM blobs WHERE cid = $1", cid_str)
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(map_sqlite_error)?;
+
+        Ok(result)
+    }
+
+    async fn delete_blob_by_cid(&self, cid: &CidLink) -> Result<(), DbError> {
+        let cid_str = cid.as_str();
+        sqlx::query!("DELETE FROM blobs WHERE cid = $1", cid_str)
+            .execute(&self.pool)
+            .await
+            .map_err(map_sqlite_error)?;
+
+        Ok(())
+    }
+
+    async fn get_admin_account_info_by_did(
+        &self,
+        did: &Did,
+    ) -> Result<Option<AdminAccountInfo>, DbError> {
+        let did_str = did.as_str();
+        let result = sqlx::query!(
+            r#"
+            SELECT id, did, handle, email, created_at, invites_disabled, email_verified, deactivated_at
+            FROM users
+            WHERE did = $1
+            "#,
+            did_str
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        result
+            .map(|r| {
+                Ok(AdminAccountInfo {
+                    id: parse_uuid(r.id.unwrap_or_default())?,
+                    did: column(r.did, col::USERS_DID)?,
+                    handle: column(r.handle, col::USERS_HANDLE)?,
+                    email: r.email,
+                    created_at: parse_timestamp(r.created_at)?,
+                    invites_disabled: r.invites_disabled.unwrap_or(0) != 0,
+                    email_verified: r.email_verified != 0,
+                    deactivated_at: parse_optional_timestamp(r.deactivated_at)?,
+                })
+            })
+            .transpose()
+    }
+
+    async fn get_admin_account_infos_by_dids(
+        &self,
+        dids: &[Did],
+    ) -> Result<Vec<AdminAccountInfo>, DbError> {
+        let mut results = Vec::new();
+        for did in dids {
+            if let Some(info) = self.get_admin_account_info_by_did(did).await? {
+                results.push(info);
+            }
+        }
+        Ok(results)
+    }
+
+    async fn get_invite_code_uses_by_users(
+        &self,
+        user_ids: &[Uuid],
+    ) -> Result<Vec<(Uuid, InviteCode)>, DbError> {
+        let mut results = Vec::new();
+        for user_id in user_ids {
+            let rows = sqlx::query_scalar!(
+                "SELECT code FROM invite_code_uses WHERE used_by_user = $1",
+                user_id
+            )
+            .fetch_all(&self.pool)
+            .await
+            .map_err(map_sqlite_error)?;
+            results.extend(
+                rows.into_iter()
+                    .map(|code| (*user_id, InviteCode::from(code))),
+            );
+        }
+        Ok(results)
+    }
+
+    async fn get_deletion_request_by_did(
+        &self,
+        did: &Did,
+    ) -> Result<Option<DeletionRequestWithToken>, DbError> {
+        let did_str = did.as_str();
+        let row = sqlx::query!(
+            r#"SELECT token, did, expires_at FROM account_deletion_requests WHERE did = $1"#,
+            did_str
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        row.map(|r| {
+            Ok(DeletionRequestWithToken {
+                token: r.token.unwrap_or_default(),
+                did: column(r.did, col::ACCOUNT_DELETION_REQUESTS_DID)?,
+                expires_at: parse_timestamp(r.expires_at)?,
+            })
+        })
+        .transpose()
+    }
+
+    async fn get_latest_comms_for_user(
+        &self,
+        user_id: Uuid,
+        comms_type: CommsType,
+        limit: i64,
+    ) -> Result<Vec<QueuedComms>, DbError> {
+        let comms_type = comms_type as CommsType;
+        let results = sqlx::query_as_unchecked!(
+            QueuedComms,
+            r#"SELECT
+                id, user_id,
+                channel as "channel: CommsChannel",
+                comms_type as "comms_type: CommsType",
+                status as "status: CommsStatus",
+                recipient, subject, body, metadata,
+                attempts, max_attempts, last_error,
+                created_at, updated_at, scheduled_for, processed_at
+            FROM comms_queue
+            WHERE user_id = $1 AND comms_type = $2
+            ORDER BY created_at DESC
+            LIMIT $3"#,
+            user_id,
+            comms_type,
+            limit
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(results)
+    }
+
+    async fn count_comms_by_type(
+        &self,
+        user_id: Uuid,
+        comms_type: CommsType,
+    ) -> Result<i64, DbError> {
+        let comms_type = comms_type as CommsType;
+        let count = sqlx::query_scalar!(
+            r#"SELECT COUNT(*) as "count!" FROM comms_queue WHERE user_id = $1 AND comms_type = $2"#,
+            user_id,
+            comms_type
+        )
+        .fetch_one(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(count)
+    }
+
+    async fn delete_comms_by_type_for_user(
+        &self,
+        user_id: Uuid,
+        comms_type: CommsType,
+    ) -> Result<u64, DbError> {
+        let comms_type = comms_type as CommsType;
+        let result = sqlx::query!(
+            "DELETE FROM comms_queue WHERE user_id = $1 AND comms_type = $2",
+            user_id,
+            comms_type
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(result.rows_affected())
+    }
+
+    async fn expire_deletion_request(&self, token: &str) -> Result<(), DbError> {
+        sqlx::query!(
+            "UPDATE account_deletion_requests SET expires_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') - '-1 hour' WHERE token = $1",
+            token
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(())
+    }
+
+    async fn get_reserved_signing_key_full(
+        &self,
+        public_key_did_key: &Did,
+    ) -> Result<Option<ReservedSigningKeyFull>, DbError> {
+        let public_key = public_key_did_key.as_str();
+        let row = sqlx::query!(
+            r#"SELECT id, did, public_key_did_key, private_key_bytes, expires_at, used_at
+            FROM reserved_signing_keys WHERE public_key_did_key = $1"#,
+            public_key
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        row.map(|r| {
+            Ok(ReservedSigningKeyFull {
+                id: parse_uuid(r.id.unwrap_or_default())?,
+                did: opt_column(r.did, col::RESERVED_SIGNING_KEYS_DID)?,
+                public_key_did_key: column(
+                    r.public_key_did_key,
+                    col::RESERVED_SIGNING_KEYS_PUBLIC_KEY_DID_KEY,
+                )?,
+                private_key_bytes: r.private_key_bytes,
+                expires_at: parse_timestamp(r.expires_at)?,
+                used_at: parse_optional_timestamp(r.used_at)?,
+            })
+        })
+        .transpose()
+    }
+
+    async fn get_plc_tokens_by_did(&self, did: &Did) -> Result<Vec<PlcTokenInfo>, DbError> {
+        let did_str = did.as_str();
+        let results = sqlx::query!(
+            r#"SELECT t.token, t.expires_at
+            FROM plc_operation_tokens t
+            JOIN users u ON t.user_id = u.id
+            WHERE u.did = $1"#,
+            did_str
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        results
+            .into_iter()
+            .map(|r| {
+                Ok(PlcTokenInfo {
+                    token: r.token,
+                    expires_at: parse_timestamp(r.expires_at)?,
+                })
+            })
+            .collect()
+    }
+
+    async fn count_plc_tokens_by_did(&self, did: &Did) -> Result<i64, DbError> {
+        let did_str = did.as_str();
+        let count = sqlx::query_scalar!(
+            r#"SELECT COUNT(*) as "count!"
+            FROM plc_operation_tokens t
+            JOIN users u ON t.user_id = u.id
+            WHERE u.did = $1"#,
+            did_str
+        )
+        .fetch_one(&self.pool)
+        .await
+        .map_err(map_sqlite_error)?;
+
+        Ok(count)
+    }
+}

@@ -33,8 +33,10 @@ RUN mkdir -p /stage/var/lib/tranquil-pds/blobs /stage/var/lib/tranquil-pds/store
 ENV RUSTFLAGS="-C linker=clang -C link-arg=-fuse-ld=mold"
 WORKDIR /app
 ARG SLIM="false"
+ARG BACKEND="postgres"
 COPY Cargo.toml Cargo.lock ./
 COPY .sqlx ./.sqlx
+COPY .sqlx-sqlite ./.sqlx-sqlite
 COPY crates/tranquil-types ./crates/tranquil-types
 COPY crates/tranquil-crypto ./crates/tranquil-crypto
 COPY crates/tranquil-scopes ./crates/tranquil-scopes
@@ -61,7 +63,12 @@ COPY migrations ./migrations
 RUN --mount=type=cache,id=cargo-registry,target=/usr/local/cargo/registry \
     --mount=type=cache,id=cargo-git,target=/usr/local/cargo/git \
     --mount=type=cache,id=tranquil-target,target=/app/target,sharing=locked \
-    if [ "$SLIM" = "true" ]; then \
+    if [ "$BACKEND" = "sqlite" ]; then \
+      mkdir -p crates/tranquil-db/.sqlx crates/tranquil-signal/.sqlx; \
+      cp .sqlx-sqlite/*.json crates/tranquil-db/.sqlx/; \
+      cp .sqlx-sqlite/*.json crates/tranquil-signal/.sqlx/; \
+      SQLX_OFFLINE=true cargo build --release -p tranquil-server --no-default-features --features sqlite; \
+    elif [ "$SLIM" = "true" ]; then \
       SQLX_OFFLINE=true cargo build --release -p tranquil-server --no-default-features; \
     else \
       SQLX_OFFLINE=true cargo build --release -p tranquil-server; \

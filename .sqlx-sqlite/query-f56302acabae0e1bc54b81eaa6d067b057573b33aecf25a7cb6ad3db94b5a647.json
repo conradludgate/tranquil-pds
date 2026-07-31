@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT COUNT(DISTINCT blob_cid) as \"count!\" FROM record_blobs WHERE repo_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "count!",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "f56302acabae0e1bc54b81eaa6d067b057573b33aecf25a7cb6ad3db94b5a647"
+}

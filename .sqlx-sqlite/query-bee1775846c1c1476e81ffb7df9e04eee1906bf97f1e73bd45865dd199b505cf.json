@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT expires_at FROM plc_operation_tokens WHERE user_id = $1 AND token = $2",
+  "describe": {
+    "columns": [
+      {
+        "name": "expires_at",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "bee1775846c1c1476e81ffb7df9e04eee1906bf97f1e73bd45865dd199b505cf"
+}

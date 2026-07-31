@@ -1,0 +1,56 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT t.did, t.expires_at, u.deactivated_at, u.takedown_ref, u.is_admin,\n                      k.key_bytes as \"key_bytes?\", k.encryption_version as \"encryption_version?\"\n               FROM oauth_token t\n               JOIN users u ON t.did = u.did\n               LEFT JOIN user_keys k ON u.id = k.user_id\n               WHERE t.token_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "did",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "expires_at",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "deactivated_at",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "takedown_ref",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "is_admin",
+        "ordinal": 4,
+        "type_info": "Integer"
+      },
+      {
+        "name": "key_bytes?",
+        "ordinal": 5,
+        "type_info": "Blob"
+      },
+      {
+        "name": "encryption_version?",
+        "ordinal": 6,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "49cd5f335121f5eb4f578f6ca3af40e95264ded8021cfc7490b578a96fb8db3c"
+}

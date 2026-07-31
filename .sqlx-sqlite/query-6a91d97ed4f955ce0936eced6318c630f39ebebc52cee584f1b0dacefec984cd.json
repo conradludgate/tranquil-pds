@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT record FROM signal_kyber_pre_keys\n             WHERE identity = $1 AND is_last_resort = TRUE",
+  "describe": {
+    "columns": [
+      {
+        "name": "record",
+        "ordinal": 0,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "6a91d97ed4f955ce0936eced6318c630f39ebebc52cee584f1b0dacefec984cd"
+}

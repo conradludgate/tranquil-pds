@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT COUNT(*) AS \"count!\" FROM signal_kyber_pre_keys\n             WHERE identity = $1 AND is_last_resort = $2",
+  "describe": {
+    "columns": [
+      {
+        "name": "count!",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "63ecf786e52a52d83232f6d4c8d93d5d7065f5dbfd3cd1e259d7990d02da1114"
+}

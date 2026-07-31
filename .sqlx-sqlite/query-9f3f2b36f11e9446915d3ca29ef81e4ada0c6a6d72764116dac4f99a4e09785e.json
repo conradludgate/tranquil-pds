@@ -1,0 +1,110 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT\n                id, user_id,\n                channel as \"channel: CommsChannel\",\n                comms_type as \"comms_type: CommsType\",\n                status as \"status: CommsStatus\",\n                recipient, subject, body, metadata,\n                attempts, max_attempts, last_error,\n                created_at, updated_at, scheduled_for, processed_at\n            FROM comms_queue\n            WHERE user_id = $1 AND comms_type = $2\n            ORDER BY created_at DESC\n            LIMIT $3",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "user_id",
+        "ordinal": 1,
+        "type_info": "Blob"
+      },
+      {
+        "name": "channel: CommsChannel",
+        "ordinal": 2,
+        "type_info": "Null"
+      },
+      {
+        "name": "comms_type: CommsType",
+        "ordinal": 3,
+        "type_info": "Null"
+      },
+      {
+        "name": "status: CommsStatus",
+        "ordinal": 4,
+        "type_info": "Null"
+      },
+      {
+        "name": "recipient",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "subject",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "body",
+        "ordinal": 7,
+        "type_info": "Text"
+      },
+      {
+        "name": "metadata",
+        "ordinal": 8,
+        "type_info": "Text"
+      },
+      {
+        "name": "attempts",
+        "ordinal": 9,
+        "type_info": "Integer"
+      },
+      {
+        "name": "max_attempts",
+        "ordinal": 10,
+        "type_info": "Integer"
+      },
+      {
+        "name": "last_error",
+        "ordinal": 11,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 12,
+        "type_info": "Text"
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 13,
+        "type_info": "Text"
+      },
+      {
+        "name": "scheduled_for",
+        "ordinal": 14,
+        "type_info": "Text"
+      },
+      {
+        "name": "processed_at",
+        "ordinal": 15,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "9f3f2b36f11e9446915d3ca29ef81e4ada0c6a6d72764116dac4f99a4e09785e"
+}

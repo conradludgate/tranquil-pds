@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO signal_sender_keys\n             (address, device_id, identity, distribution_id, record)\n             VALUES ($1, $2, $3, $4, $5)\n             ON CONFLICT (address, device_id, identity, distribution_id) DO UPDATE SET record = $5",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "0a3eaf432e99ef22aa6b3b43978740b085f6416a058ea2da6d639ea1cf276eda"
+}

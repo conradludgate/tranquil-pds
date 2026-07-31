@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id FROM users WHERE LOWER(discord_username) = LOWER($1) AND discord_username IS NOT NULL AND deactivated_at IS NULL",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "bb0eec6faeb958ac07e5de1dfabdeb1e2994936f822fc7afb635347d60c701ed"
+}

@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT\n                created_at,\n                channel as \"channel: CommsChannel\",\n                comms_type as \"comms_type: CommsType\",\n                status as \"status: CommsStatus\",\n                subject,\n                body\n            FROM comms_queue\n            WHERE user_id = $1\n            ORDER BY created_at DESC\n            LIMIT $2\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "created_at",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "channel: CommsChannel",
+        "ordinal": 1,
+        "type_info": "Null"
+      },
+      {
+        "name": "comms_type: CommsType",
+        "ordinal": 2,
+        "type_info": "Null"
+      },
+      {
+        "name": "status: CommsStatus",
+        "ordinal": 3,
+        "type_info": "Null"
+      },
+      {
+        "name": "subject",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "body",
+        "ordinal": 5,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "25309f4a08845a49557d694ad9b5b9a137be4dcce28e9293551c8c3fd40fdd86"
+}

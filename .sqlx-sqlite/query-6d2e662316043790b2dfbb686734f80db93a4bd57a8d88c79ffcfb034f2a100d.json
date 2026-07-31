@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM backlinks WHERE repo_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "6d2e662316043790b2dfbb686734f80db93a4bd57a8d88c79ffcfb034f2a100d"
+}

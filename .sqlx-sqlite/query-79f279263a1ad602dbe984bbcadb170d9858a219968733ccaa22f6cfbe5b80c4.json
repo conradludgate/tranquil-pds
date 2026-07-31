@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT CAST(cid AS TEXT) as \"cid!: String\", takedown_ref FROM blobs WHERE cid = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "cid!: String",
+        "ordinal": 0,
+        "type_info": "Null"
+      },
+      {
+        "name": "takedown_ref",
+        "ordinal": 1,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      null,
+      true
+    ]
+  },
+  "hash": "79f279263a1ad602dbe984bbcadb170d9858a219968733ccaa22f6cfbe5b80c4"
+}

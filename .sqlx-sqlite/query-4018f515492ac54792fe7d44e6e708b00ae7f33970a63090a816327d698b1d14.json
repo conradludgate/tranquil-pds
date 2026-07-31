@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM account_deletion_requests WHERE token = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "4018f515492ac54792fe7d44e6e708b00ae7f33970a63090a816327d698b1d14"
+}

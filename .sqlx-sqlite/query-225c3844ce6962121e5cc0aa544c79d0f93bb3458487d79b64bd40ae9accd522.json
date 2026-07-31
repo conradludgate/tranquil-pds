@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT deactivated_at, takedown_ref, is_admin FROM users WHERE did = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "deactivated_at",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "takedown_ref",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "is_admin",
+        "ordinal": 2,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "225c3844ce6962121e5cc0aa544c79d0f93bb3458487d79b64bd40ae9accd522"
+}

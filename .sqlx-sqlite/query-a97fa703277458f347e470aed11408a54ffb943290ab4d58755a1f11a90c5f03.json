@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT 1 as \"one!: i64\" FROM oauth_device od\n               JOIN oauth_account_device oad ON od.id = oad.device_id\n               WHERE oad.did = $1 AND od.id = $2",
+  "describe": {
+    "columns": [
+      {
+        "name": "one!: i64",
+        "ordinal": 0,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "a97fa703277458f347e470aed11408a54ffb943290ab4d58755a1f11a90c5f03"
+}
