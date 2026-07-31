@@ -93,6 +93,19 @@ pub fn app_with_routes(state: AppState, external: ExternalRoutes) -> Router {
 
     let well_known_router = external.well_known;
 
+    let mut cors_headers = vec![
+        http::header::AUTHORIZATION,
+        http::header::CONTENT_TYPE,
+        http::header::CONTENT_ENCODING,
+        http::header::ACCEPT_ENCODING,
+        http::header::USER_AGENT,
+        util::HEADER_DPOP,
+        util::HEADER_ATPROTO_PROXY,
+        util::HEADER_ATPROTO_ACCEPT_LABELERS,
+    ];
+    #[cfg(feature = "bsky-support")]
+    cors_headers.push(util::HEADER_X_BSKY_TOPICS);
+
     let router = Router::new()
         .nest_service("/xrpc", xrpc_service)
         .nest("/oauth", oauth_router)
@@ -106,17 +119,7 @@ pub fn app_with_routes(state: AppState, external: ExternalRoutes) -> Router {
             CorsLayer::new()
                 .allow_origin(Any)
                 .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
-                .allow_headers([
-                    http::header::AUTHORIZATION,
-                    http::header::CONTENT_TYPE,
-                    http::header::CONTENT_ENCODING,
-                    http::header::ACCEPT_ENCODING,
-                    http::header::USER_AGENT,
-                    util::HEADER_DPOP,
-                    util::HEADER_ATPROTO_PROXY,
-                    util::HEADER_ATPROTO_ACCEPT_LABELERS,
-                    util::HEADER_X_BSKY_TOPICS,
-                ])
+                .allow_headers(cors_headers)
                 .expose_headers([
                     http::header::WWW_AUTHENTICATE,
                     util::HEADER_DPOP_NONCE,

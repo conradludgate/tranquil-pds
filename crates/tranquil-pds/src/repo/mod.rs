@@ -62,6 +62,7 @@ impl BlockStore for SqliteBlockStore {
         &self,
         blocks: impl IntoIterator<Item = (Cid, Bytes)> + Send,
     ) -> Result<(), RepoError> {
+        let blocks: Vec<_> = blocks.into_iter().collect();
         let mut tx = self.pool.begin().await.map_err(sqlite_repo_error)?;
         for (cid, data) in blocks {
             sqlx::query(

@@ -750,7 +750,6 @@ fn wire_tranquil_store(
     tracing::info!(data_dir = %store_cfg.data_dir, "tranquil-store data directory");
 
     let repos = RepositorySet {
-        pool: None,
         repo: Arc::new(client.clone()),
         backlink: Arc::new(client.clone()),
         blob: Arc::new(client.clone()),
