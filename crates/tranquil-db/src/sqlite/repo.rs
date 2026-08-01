@@ -1201,7 +1201,7 @@ impl RepoRepository for SqliteRepoRepository {
 
     async fn get_account_with_repo(&self, did: &Did) -> Result<Option<RepoAccountInfo>, DbError> {
         let row = sqlite_query_unchecked!(
-            r#"SELECT u.id, u.did, u.deactivated_at, u.takedown_ref, r.repo_root_cid as "repo_root_cid?"
+            r#"SELECT u.id, u.did, u.deactivated_at, u.takedown_ref, r.repo_root_cid AS repo_root_cid
                FROM users u
                LEFT JOIN repos r ON r.user_id = u.id
                WHERE u.did = $1"#,
