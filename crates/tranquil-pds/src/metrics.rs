@@ -8,6 +8,7 @@ use metrics::{counter, gauge, histogram};
 use metrics_exporter_prometheus::{PrometheusBuilder, PrometheusHandle};
 use std::sync::OnceLock;
 use std::time::Instant;
+use tracing::Instrument;
 
 static PROMETHEUS_HANDLE: OnceLock<PrometheusHandle> = OnceLock::new();
 
@@ -96,26 +97,41 @@ pub async fn metrics_middleware(request: Request<Body>, next: Next) -> Response 
     let start = Instant::now();
     let method = request.method().to_string();
     let path = normalize_path(request.uri().path());
+    let span = tracing::info_span!(
+        "http.server.request",
+        "otel.kind" = "server",
+        "http.request.method" = %method,
+        "http.route" = %path,
+        "url.path" = %path,
+        "http.response.status_code" = tracing::field::Empty,
+    );
 
-    let response = next.run(request).await;
+    let response = async move {
+        let response = next.run(request).await;
 
-    let duration = start.elapsed().as_secs_f64();
-    let status = response.status().as_u16().to_string();
+        let duration = start.elapsed().as_secs_f64();
+        let status = response.status().as_u16().to_string();
+        tracing::Span::current().record("http.response.status_code", &status);
 
-    counter!(
-        "tranquil_pds_http_requests_total",
-        "method" => method.clone(),
-        "path" => path.clone(),
-        "status" => status.clone()
-    )
-    .increment(1);
+        counter!(
+            "tranquil_pds_http_requests_total",
+            "method" => method.clone(),
+            "path" => path.clone(),
+            "status" => status.clone()
+        )
+        .increment(1);
 
-    histogram!(
-        "tranquil_pds_http_request_duration_seconds",
-        "method" => method,
-        "path" => path
-    )
-    .record(duration);
+        histogram!(
+            "tranquil_pds_http_request_duration_seconds",
+            "method" => method,
+            "path" => path
+        )
+        .record(duration);
+
+        response
+    }
+    .instrument(span)
+    .await;
 
     response
 }

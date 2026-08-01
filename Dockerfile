@@ -69,7 +69,7 @@ RUN --mount=type=cache,id=cargo-registry,target=/usr/local/cargo/registry \
       mkdir -p crates/tranquil-db/.sqlx crates/tranquil-signal/.sqlx; \
       cp .sqlx-sqlite/*.json crates/tranquil-db/.sqlx/; \
       cp .sqlx-sqlite/*.json crates/tranquil-signal/.sqlx/; \
-      SQLX_OFFLINE=true cargo build -j "$CARGO_BUILD_JOBS" --release -p tranquil-server --no-default-features --features sqlite; \
+      SQLX_OFFLINE=true cargo build -j "$CARGO_BUILD_JOBS" --release -p tranquil-server --no-default-features --features sqlite,s3,otel; \
     elif [ "$SLIM" = "true" ]; then \
       SQLX_OFFLINE=true cargo build -j "$CARGO_BUILD_JOBS" --release -p tranquil-server --no-default-features; \
     else \

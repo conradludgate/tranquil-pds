@@ -25,6 +25,9 @@ hex = { workspace = true }
 http = { workspace = true }
 hyper = { workspace = true }
 hyper-util = { workspace = true }
+opentelemetry = { workspace = true, optional = true }
+opentelemetry-otlp = { workspace = true, optional = true }
+opentelemetry_sdk = { workspace = true, optional = true }
 quinn = { workspace = true }
 reqwest = { workspace = true }
 rustls = { workspace = true }
@@ -35,6 +38,7 @@ tokio-rustls = { workspace = true }
 tokio-util = { workspace = true }
 tower = { workspace = true }
 tracing = { workspace = true }
+tracing-opentelemetry = { workspace = true, optional = true }
 tracing-subscriber = { workspace = true }
 
 [dev-dependencies]
@@ -50,3 +54,4 @@ sqlite = ["tranquil-pds/sqlite"]
 s3 = ["tranquil-pds/s3"]
 valkey = ["tranquil-pds/valkey"]
 native-tls-roots = ["tranquil-pds/native-tls-roots"]
+otel = ["dep:opentelemetry", "dep:opentelemetry-otlp", "dep:opentelemetry_sdk", "dep:tracing-opentelemetry"]

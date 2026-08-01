@@ -103,6 +103,9 @@ k256 = { version = "0.13", features = ["ecdsa", "pem", "pkcs8"] }
 metrics = "0.24"
 metrics-exporter-prometheus = { version = "0.16", default-features = false, features = ["http-listener"] }
 multibase = "0.9"
+opentelemetry = "0.32"
+opentelemetry-otlp = { version = "0.32", default-features = false, features = ["trace", "http-proto", "reqwest-blocking-client", "reqwest-rustls"] }
+opentelemetry_sdk = { version = "0.32" }
 parking_lot = "0.12"
 multihash = "0.19"
 p256 = { version = "0.13", features = ["ecdsa"] }
@@ -135,7 +138,8 @@ tower = "0.5"
 tower-http = { version = "0.6", features = ["fs", "cors"] }
 tower-layer = "0.3"
 tracing = "0.1"
-tracing-subscriber = "0.3"
+tracing-opentelemetry = "0.33"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 urlencoding = "2.1"
 uuid = { version = "1.19", features = ["v4", "v5", "v7", "fast-rng", "serde"] }
 webauthn-rs = { version = "0.6.0-dev", features = ["danger-allow-state-serialisation", "danger-user-presence-only-security-keys", "conditional-ui"] }

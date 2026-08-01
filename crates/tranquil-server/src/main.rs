@@ -5,6 +5,8 @@ use std::process::ExitCode;
 use std::sync::Arc;
 use tokio_util::sync::CancellationToken;
 use tracing::{error, info, warn};
+#[cfg(feature = "otel")]
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use tranquil_pds::BUILD_VERSION;
 use tranquil_pds::comms::{CommsService, DiscordSender, EmailSender, SignalSender, TelegramSender};
 
@@ -91,6 +93,15 @@ async fn main() -> ExitCode {
         };
     }
 
+    #[cfg(feature = "otel")]
+    let tracer_provider = match init_tracing() {
+        Ok(provider) => provider,
+        Err(e) => {
+            eprintln!("Failed to initialize OpenTelemetry: {e:#}");
+            return ExitCode::FAILURE;
+        }
+    };
+    #[cfg(not(feature = "otel"))]
     tracing_subscriber::fmt::init();
 
     let config = match tranquil_config::load(cli.config.as_ref()) {
@@ -119,13 +130,66 @@ async fn main() -> ExitCode {
 
     tranquil_pds::metrics::init_metrics();
 
-    match run().await {
+    let exit_code = match run().await {
         Ok(()) => ExitCode::SUCCESS,
         Err(e) => {
             error!("Fatal error: {}", e);
             ExitCode::FAILURE
         }
+    };
+
+    #[cfg(feature = "otel")]
+    if let Some(provider) = tracer_provider {
+        if let Err(e) = provider.shutdown() {
+            eprintln!("Failed to shut down OpenTelemetry: {e}");
+        }
     }
+
+    exit_code
+}
+
+#[cfg(feature = "otel")]
+fn init_tracing()
+-> Result<Option<opentelemetry_sdk::trace::SdkTracerProvider>, Box<dyn std::error::Error>> {
+    let endpoint_configured = std::env::var_os("OTEL_EXPORTER_OTLP_ENDPOINT").is_some()
+        || std::env::var_os("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT").is_some();
+    let sdk_disabled = matches!(
+        std::env::var("OTEL_SDK_DISABLED").as_deref(),
+        Ok("true") | Ok("1")
+    );
+
+    if !endpoint_configured || sdk_disabled {
+        tracing_subscriber::fmt::init();
+        return Ok(None);
+    }
+
+    let exporter = opentelemetry_otlp::SpanExporter::builder()
+        .with_http()
+        .build()?;
+    let service_name =
+        std::env::var("OTEL_SERVICE_NAME").unwrap_or_else(|_| "tranquil-pds".to_string());
+    let service_version =
+        std::env::var("OTEL_SERVICE_VERSION").unwrap_or_else(|_| BUILD_VERSION.to_string());
+    let resource = opentelemetry_sdk::Resource::builder()
+        .with_service_name(service_name)
+        .with_attribute(opentelemetry::KeyValue::new("service.version", service_version))
+        .build();
+    let provider = opentelemetry_sdk::trace::SdkTracerProvider::builder()
+        .with_resource(resource)
+        .with_batch_exporter(exporter)
+        .build();
+    let tracer = opentelemetry::trace::TracerProvider::tracer(&provider, "tranquil-pds");
+    let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
+    let filter = tracing_subscriber::EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info"));
+
+    tracing_subscriber::registry()
+        .with(filter)
+        .with(tracing_subscriber::fmt::layer())
+        .with(otel_layer)
+        .init();
+    info!("OpenTelemetry tracing enabled");
+    Ok(Some(provider))
 }
 
 async fn healthcheck(config: Option<&PathBuf>) -> ExitCode {
