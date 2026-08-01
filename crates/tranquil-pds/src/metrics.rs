@@ -8,7 +8,7 @@ use metrics::{counter, gauge, histogram};
 use metrics_exporter_prometheus::{PrometheusBuilder, PrometheusHandle};
 use std::sync::OnceLock;
 use std::time::Instant;
-use tracing::Instrument;
+use tracing::{Instrument, Span};
 
 static PROMETHEUS_HANDLE: OnceLock<PrometheusHandle> = OnceLock::new();
 
@@ -97,21 +97,19 @@ pub async fn metrics_middleware(request: Request<Body>, next: Next) -> Response 
     let start = Instant::now();
     let method = request.method().to_string();
     let path = normalize_path(request.uri().path());
-    let span = tracing::info_span!(
-        "http.server.request",
-        "otel.kind" = "server",
-        "http.request.method" = %method,
-        "http.route" = %path,
-        "url.path" = %path,
-        "http.response.status_code" = tracing::field::Empty,
-    );
+    let server_span = Span::current();
+    let xrpc_span = make_xrpc_span(&method, &path);
 
     let response = async move {
         let response = next.run(request).await;
 
         let duration = start.elapsed().as_secs_f64();
-        let status = response.status().as_u16().to_string();
-        tracing::Span::current().record("http.response.status_code", &status);
+        let status_code = response.status().as_u16();
+        let status = status_code.to_string();
+        // `axum-tracing-opentelemetry` declares this as an integer-valued
+        // semantic-convention attribute. Keep this recording here as well so
+        // the field remains correct if the middleware is reused independently.
+        server_span.record("http.response.status_code", i64::from(status_code));
 
         counter!(
             "tranquil_pds_http_requests_total",
@@ -130,10 +128,29 @@ pub async fn metrics_middleware(request: Request<Body>, next: Next) -> Response 
 
         response
     }
-    .instrument(span)
+    .instrument(xrpc_span)
     .await;
 
     response
+}
+
+fn make_xrpc_span(method: &str, path: &str) -> Span {
+    let Some(nsid) = path.strip_prefix("/xrpc/").filter(|nsid| !nsid.is_empty()) else {
+        return Span::none();
+    };
+
+    let kind = match method {
+        "GET" => "query",
+        "POST" => "procedure",
+        _ => "other",
+    };
+
+    tracing::info_span!(
+        "xrpc.request",
+        "atproto.xrpc.nsid" = %nsid,
+        "atproto.xrpc.kind" = %kind,
+        "atproto.xrpc.http_method" = %method,
+    )
 }
 
 fn normalize_path(path: &str) -> String {

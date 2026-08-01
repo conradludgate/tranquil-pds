@@ -30,6 +30,7 @@ pub mod validation;
 
 use api::proxy::XrpcProxyLayer;
 use axum::{Json, Router, extract::DefaultBodyLimit, http::Method, middleware, routing::get};
+use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
 use http::StatusCode;
 use serde_json::json;
 use state::AppState;
@@ -115,6 +116,8 @@ pub fn app_with_routes(state: AppState, external: ExternalRoutes) -> Router {
         .layer(DefaultBodyLimit::max(GENERAL_BODY_LIMIT))
         .layer(axum::middleware::map_response(rewrite_extractor_errors))
         .layer(middleware::from_fn(metrics::metrics_middleware))
+        .layer(OtelInResponseLayer::default())
+        .layer(OtelAxumLayer::default())
         .layer(
             CorsLayer::new()
                 .allow_origin(Any)
