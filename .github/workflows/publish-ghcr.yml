@@ -1,4 +1,4 @@
-name: Publish SQLite image
+name: Publish Tranquil PDS image
 
 on:
   push:
@@ -13,6 +13,7 @@ env:
 
 jobs:
   publish:
+    name: Publish image
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -38,11 +39,11 @@ jobs:
         with:
           images: ${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=sqlite
-            type=sha,prefix=sqlite-
+            type=raw,value=latest
+            type=sha,prefix=sha-
             type=ref,event=tag
 
-      - name: Build and publish SQLite image
+      - name: Build and publish image
         uses: docker/build-push-action@v6
         with:
           context: .
