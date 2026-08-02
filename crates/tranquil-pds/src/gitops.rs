@@ -464,10 +464,12 @@ fn collect_files(directory: &Path, files: &mut Vec<PathBuf>) -> Result<(), ScanE
         let file_type = entry
             .file_type()
             .map_err(|error| ScanError(format!("inspect {}: {error}", path.display())))?;
-        if file_type.is_dir() {
+        let is_directory = file_type.is_dir() || (file_type.is_symlink() && path.is_dir());
+        if is_directory {
             // Hidden directories are implementation details rather than part
             // of the GitOps source layout. This also excludes the timestamped
-            // directories used by Kubernetes ConfigMap and Secret volumes.
+            // directories and symlinks used by Kubernetes ConfigMap and Secret
+            // volumes.
             if entry.file_name().to_string_lossy().starts_with('.') {
                 continue;
             }
@@ -526,6 +528,27 @@ mod tests {
             fs::create_dir_all(&hidden_collection).unwrap();
             fs::write(hidden_collection.join("invalid.json"), b"not json").unwrap();
         }
+
+        let snapshot = scan_directory(root.path()).unwrap();
+        assert_eq!(snapshot.len(), 1);
+        assert!(snapshot.contains_key("app.example.record/abc.json"));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn follows_visible_directory_symlinks() {
+        use std::os::unix::fs::symlink;
+
+        let root = tempfile::tempdir().unwrap();
+        let backing = tempfile::tempdir().unwrap();
+        let collection = backing.path().join("app.example.record");
+        fs::create_dir_all(&collection).unwrap();
+        fs::write(
+            collection.join("abc.json"),
+            br#"{"$type":"app.example.record","value":"ok"}"#,
+        )
+        .unwrap();
+        symlink(&collection, root.path().join("app.example.record")).unwrap();
 
         let snapshot = scan_directory(root.path()).unwrap();
         assert_eq!(snapshot.len(), 1);
