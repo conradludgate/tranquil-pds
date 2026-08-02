@@ -172,7 +172,10 @@ fn init_tracing()
         std::env::var("OTEL_SERVICE_VERSION").unwrap_or_else(|_| BUILD_VERSION.to_string());
     let resource = opentelemetry_sdk::Resource::builder()
         .with_service_name(service_name)
-        .with_attribute(opentelemetry::KeyValue::new("service.version", service_version))
+        .with_attribute(opentelemetry::KeyValue::new(
+            "service.version",
+            service_version,
+        ))
         .build();
     let provider = opentelemetry_sdk::trace::SdkTracerProvider::builder()
         .with_resource(resource)
