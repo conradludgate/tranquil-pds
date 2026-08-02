@@ -10,7 +10,7 @@ RUN pnpm build
 
 FROM rust:1.96-slim-trixie AS builder
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      ca-certificates pkg-config libssl-dev mold clang protobuf-compiler curl xz-utils \
+      ca-certificates pkg-config mold clang protobuf-compiler curl xz-utils \
     && rm -rf /var/lib/apt/lists/*
 ARG COMPRESS="true"
 RUN set -eux; \
@@ -33,6 +33,7 @@ RUN mkdir -p /stage/var/lib/tranquil-pds/blobs /stage/var/lib/tranquil-pds/store
 ENV RUSTFLAGS="-C linker=clang -C link-arg=-fuse-ld=mold"
 WORKDIR /app
 ARG SLIM="false"
+ARG CARGO_BUILD_JOBS="1"
 ARG BACKEND="postgres"
 COPY Cargo.toml Cargo.lock ./
 COPY .sqlx ./.sqlx
@@ -68,11 +69,11 @@ RUN --mount=type=cache,id=cargo-registry,target=/usr/local/cargo/registry \
       mkdir -p crates/tranquil-db/.sqlx crates/tranquil-signal/.sqlx; \
       cp .sqlx-sqlite/*.json crates/tranquil-db/.sqlx/; \
       cp .sqlx-sqlite/*.json crates/tranquil-signal/.sqlx/; \
-      SQLX_OFFLINE=true cargo build --release -p tranquil-server --no-default-features --features sqlite; \
+      SQLX_OFFLINE=true cargo build -j "$CARGO_BUILD_JOBS" --release -p tranquil-server --no-default-features --features sqlite; \
     elif [ "$SLIM" = "true" ]; then \
-      SQLX_OFFLINE=true cargo build --release -p tranquil-server --no-default-features; \
+      SQLX_OFFLINE=true cargo build -j "$CARGO_BUILD_JOBS" --release -p tranquil-server --no-default-features; \
     else \
-      SQLX_OFFLINE=true cargo build --release -p tranquil-server; \
+      SQLX_OFFLINE=true cargo build -j "$CARGO_BUILD_JOBS" --release -p tranquil-server; \
     fi && \
     cp target/release/tranquil-server /tmp/tranquil-pds && \
     if [ "$COMPRESS" = "true" ] && command -v upx >/dev/null 2>&1; then upx --best --lzma /tmp/tranquil-pds; fi
