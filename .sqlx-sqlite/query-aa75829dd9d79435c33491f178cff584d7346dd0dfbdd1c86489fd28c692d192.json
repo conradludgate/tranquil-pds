@@ -1,0 +1,68 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT token, request_uri, provider as \"provider: SsoProviderType\",\n                   provider_user_id, provider_username, provider_email, provider_email_verified,\n                   CAST(created_at AS TEXT) as \"created_at!: String\",\n                   CAST(expires_at AS TEXT) as \"expires_at!: String\"\n            FROM sso_pending_registration\n            WHERE token = $1 AND expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now')\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "token",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "request_uri",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "provider: SsoProviderType",
+        "ordinal": 2,
+        "type_info": "Null"
+      },
+      {
+        "name": "provider_user_id",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "provider_username",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "provider_email",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "provider_email_verified",
+        "ordinal": 6,
+        "type_info": "Integer"
+      },
+      {
+        "name": "created_at!: String",
+        "ordinal": 7,
+        "type_info": "Null"
+      },
+      {
+        "name": "expires_at!: String",
+        "ordinal": 8,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "aa75829dd9d79435c33491f178cff584d7346dd0dfbdd1c86489fd28c692d192"
+}

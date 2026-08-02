@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT id as \"id!: i64\", access_jti,\n                   CAST(created_at AS TEXT) as \"created_at!: String\",\n                   CAST(refresh_expires_at AS TEXT) as \"refresh_expires_at!: String\"\n            FROM session_tokens\n            WHERE did = $1 AND refresh_expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now')\n            ORDER BY created_at DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!: i64",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "access_jti",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at!: String",
+        "ordinal": 2,
+        "type_info": "Null"
+      },
+      {
+        "name": "refresh_expires_at!: String",
+        "ordinal": 3,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "4005a3b02b197f10ef988079f5eb9ab1b9ee72c2dfb27e58e113d3ba7af64a2c"
+}

@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(SELECT 1 FROM users WHERE handle = $1 AND id != $2) as \"exists!\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "exists!",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "a535a974d2dda4d7d70ec5f1d74f00f0ed8253371dc857286930b79f1e3f9b49"
+}

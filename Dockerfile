@@ -10,7 +10,7 @@ RUN pnpm build
 
 FROM rust:1.96-slim-trixie AS builder
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      ca-certificates pkg-config libssl-dev mold clang protobuf-compiler curl xz-utils \
+      ca-certificates pkg-config mold clang protobuf-compiler curl xz-utils \
     && rm -rf /var/lib/apt/lists/*
 ARG COMPRESS="true"
 RUN set -eux; \
@@ -33,8 +33,11 @@ RUN mkdir -p /stage/var/lib/tranquil-pds/blobs /stage/var/lib/tranquil-pds/store
 ENV RUSTFLAGS="-C linker=clang -C link-arg=-fuse-ld=mold"
 WORKDIR /app
 ARG SLIM="false"
+ARG CARGO_BUILD_JOBS="1"
+ARG BACKEND="postgres"
 COPY Cargo.toml Cargo.lock ./
 COPY .sqlx ./.sqlx
+COPY .sqlx-sqlite ./.sqlx-sqlite
 COPY crates/tranquil-types ./crates/tranquil-types
 COPY crates/tranquil-crypto ./crates/tranquil-crypto
 COPY crates/tranquil-scopes ./crates/tranquil-scopes
@@ -57,14 +60,20 @@ COPY crates/tranquil-oauth-server ./crates/tranquil-oauth-server
 COPY crates/tranquil-store ./crates/tranquil-store
 COPY crates/tranquil-signal ./crates/tranquil-signal
 COPY crates/tranquil-server ./crates/tranquil-server
-COPY migrations ./migrations
+RUN rm -f crates/tranquil-pds/migrations && mkdir -p crates/tranquil-pds/migrations
+COPY migrations ./crates/tranquil-pds/migrations
 RUN --mount=type=cache,id=cargo-registry,target=/usr/local/cargo/registry \
     --mount=type=cache,id=cargo-git,target=/usr/local/cargo/git \
     --mount=type=cache,id=tranquil-target,target=/app/target,sharing=locked \
-    if [ "$SLIM" = "true" ]; then \
-      SQLX_OFFLINE=true cargo build --release -p tranquil-server --no-default-features; \
+    if [ "$BACKEND" = "sqlite" ]; then \
+      mkdir -p crates/tranquil-db/.sqlx crates/tranquil-signal/.sqlx; \
+      cp .sqlx-sqlite/*.json crates/tranquil-db/.sqlx/; \
+      cp .sqlx-sqlite/*.json crates/tranquil-signal/.sqlx/; \
+      SQLX_OFFLINE=true cargo build -j "$CARGO_BUILD_JOBS" --release -p tranquil-server --no-default-features --features sqlite,s3,otel; \
+    elif [ "$SLIM" = "true" ]; then \
+      SQLX_OFFLINE=true cargo build -j "$CARGO_BUILD_JOBS" --release -p tranquil-server --no-default-features; \
     else \
-      SQLX_OFFLINE=true cargo build --release -p tranquil-server; \
+      SQLX_OFFLINE=true cargo build -j "$CARGO_BUILD_JOBS" --release -p tranquil-server; \
     fi && \
     cp target/release/tranquil-server /tmp/tranquil-pds && \
     if [ "$COMPRESS" = "true" ] && command -v upx >/dev/null 2>&1; then upx --best --lzma /tmp/tranquil-pds; fi

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO signal_profile_keys (uuid, key) VALUES ($1, $2)\n             ON CONFLICT (uuid) DO UPDATE SET key = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "da421e54619a7eae5b5ddceee4c3cbbeb8e2c946850a24b1895ce21deb0bdd93"
+}

@@ -1,0 +1,122 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT\n                u.id, u.did, u.handle, u.password_hash, u.email, u.deactivated_at, u.takedown_ref,\n                u.email_verified, u.discord_verified, u.telegram_verified, u.signal_verified,\n                u.allow_legacy_login, u.migrated_to_pds,\n                u.preferred_comms_channel as \"preferred_comms_channel: CommsChannel\",\n                k.key_bytes, k.encryption_version,\n                (SELECT verified FROM user_totp WHERE did = u.did) as totp_enabled,\n                COALESCE((SELECT CAST(value_json AS INTEGER) FROM account_preferences WHERE user_id = u.id AND name = 'email_auth_factor' ORDER BY created_at DESC LIMIT 1), 0) as \"email_2fa_enabled!: i64\"\n            FROM users u\n            JOIN user_keys k ON u.id = k.user_id\n            WHERE u.handle = $1 OR u.did = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "did",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "handle",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "password_hash",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "email",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "deactivated_at",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "takedown_ref",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "email_verified",
+        "ordinal": 7,
+        "type_info": "Integer"
+      },
+      {
+        "name": "discord_verified",
+        "ordinal": 8,
+        "type_info": "Integer"
+      },
+      {
+        "name": "telegram_verified",
+        "ordinal": 9,
+        "type_info": "Integer"
+      },
+      {
+        "name": "signal_verified",
+        "ordinal": 10,
+        "type_info": "Integer"
+      },
+      {
+        "name": "allow_legacy_login",
+        "ordinal": 11,
+        "type_info": "Integer"
+      },
+      {
+        "name": "migrated_to_pds",
+        "ordinal": 12,
+        "type_info": "Text"
+      },
+      {
+        "name": "preferred_comms_channel: CommsChannel",
+        "ordinal": 13,
+        "type_info": "Text"
+      },
+      {
+        "name": "key_bytes",
+        "ordinal": 14,
+        "type_info": "Blob"
+      },
+      {
+        "name": "encryption_version",
+        "ordinal": 15,
+        "type_info": "Integer"
+      },
+      {
+        "name": "totp_enabled",
+        "ordinal": 16,
+        "type_info": "Integer"
+      },
+      {
+        "name": "email_2fa_enabled!: i64",
+        "ordinal": 17,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      null
+    ]
+  },
+  "hash": "bec3ef352e47ff4bfef01febe94a5e4f7b16e86e4a9c70b0a81f81fbee16bc5a"
+}

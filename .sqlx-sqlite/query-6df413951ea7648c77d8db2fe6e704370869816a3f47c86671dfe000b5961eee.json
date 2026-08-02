@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT id, did, handle, email, created_at, invites_disabled, email_verified, deactivated_at\n            FROM users\n            WHERE did = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "did",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "handle",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "email",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "invites_disabled",
+        "ordinal": 5,
+        "type_info": "Integer"
+      },
+      {
+        "name": "email_verified",
+        "ordinal": 6,
+        "type_info": "Integer"
+      },
+      {
+        "name": "deactivated_at",
+        "ordinal": 7,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "6df413951ea7648c77d8db2fe6e704370869816a3f47c86671dfe000b5961eee"
+}

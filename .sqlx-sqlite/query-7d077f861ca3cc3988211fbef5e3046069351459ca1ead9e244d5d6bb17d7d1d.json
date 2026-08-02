@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT deactivated_at IS NULL as \"is_active!: i64\" FROM users WHERE did = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "is_active!: i64",
+        "ordinal": 0,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "7d077f861ca3cc3988211fbef5e3046069351459ca1ead9e244d5d6bb17d7d1d"
+}

@@ -1,0 +1,104 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT u.handle, u.email, u.email_verified, u.is_admin, u.deactivated_at, u.takedown_ref,\n                   u.preferred_locale,\n                   u.preferred_comms_channel as \"preferred_comms_channel!: CommsChannel\",\n                   u.discord_verified, u.telegram_verified, u.signal_verified,\n                   u.migrated_to_pds, u.migrated_at,\n                   (SELECT verified FROM user_totp WHERE did = u.did) as totp_enabled,\n                   COALESCE((SELECT CAST(value_json AS INTEGER) FROM account_preferences WHERE user_id = u.id AND name = 'email_auth_factor' ORDER BY created_at DESC LIMIT 1), 0) as \"email_2fa_enabled!: i64\"\n            FROM users u\n            WHERE u.did = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "handle",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "email",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "email_verified",
+        "ordinal": 2,
+        "type_info": "Integer"
+      },
+      {
+        "name": "is_admin",
+        "ordinal": 3,
+        "type_info": "Integer"
+      },
+      {
+        "name": "deactivated_at",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "takedown_ref",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "preferred_locale",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "preferred_comms_channel!: CommsChannel",
+        "ordinal": 7,
+        "type_info": "Text"
+      },
+      {
+        "name": "discord_verified",
+        "ordinal": 8,
+        "type_info": "Integer"
+      },
+      {
+        "name": "telegram_verified",
+        "ordinal": 9,
+        "type_info": "Integer"
+      },
+      {
+        "name": "signal_verified",
+        "ordinal": 10,
+        "type_info": "Integer"
+      },
+      {
+        "name": "migrated_to_pds",
+        "ordinal": 11,
+        "type_info": "Text"
+      },
+      {
+        "name": "migrated_at",
+        "ordinal": 12,
+        "type_info": "Text"
+      },
+      {
+        "name": "totp_enabled",
+        "ordinal": 13,
+        "type_info": "Integer"
+      },
+      {
+        "name": "email_2fa_enabled!: i64",
+        "ordinal": 14,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      null
+    ]
+  },
+  "hash": "ea7bc25a8087681d00ce79fb394977bd294fd83eef111dd833dc72ccab86f858"
+}

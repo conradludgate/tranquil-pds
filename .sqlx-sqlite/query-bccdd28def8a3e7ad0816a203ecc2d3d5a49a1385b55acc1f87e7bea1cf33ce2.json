@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT two_factor_enabled\n            FROM users\n            WHERE did = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "two_factor_enabled",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "bccdd28def8a3e7ad0816a203ecc2d3d5a49a1385b55acc1f87e7bea1cf33ce2"
+}

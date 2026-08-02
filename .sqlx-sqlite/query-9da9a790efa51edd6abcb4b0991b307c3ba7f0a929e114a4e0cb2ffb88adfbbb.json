@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT MAX(id) FROM signal_kyber_pre_keys\n             WHERE identity = $1 AND is_last_resort = TRUE",
+  "describe": {
+    "columns": [
+      {
+        "name": "MAX(id)",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "9da9a790efa51edd6abcb4b0991b307c3ba7f0a929e114a4e0cb2ffb88adfbbb"
+}

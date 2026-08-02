@@ -1,0 +1,68 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            DELETE FROM sso_auth_state\n            WHERE state = $1 AND expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now')\n            RETURNING state, request_uri, provider as \"provider: SsoProviderType\", action,\n                      nonce, code_verifier, did,\n                      CAST(created_at AS TEXT) as \"created_at!: String\",\n                      CAST(expires_at AS TEXT) as \"expires_at!: String\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "state",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "request_uri",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "provider: SsoProviderType",
+        "ordinal": 2,
+        "type_info": "Null"
+      },
+      {
+        "name": "action",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "nonce",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "code_verifier",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "did",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at!: String",
+        "ordinal": 7,
+        "type_info": "Null"
+      },
+      {
+        "name": "expires_at!: String",
+        "ordinal": 8,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      null,
+      null
+    ]
+  },
+  "hash": "1d4ddb7e1d94189e89dc71d7096d9581f211a521a91e16205f298d48662b9a62"
+}

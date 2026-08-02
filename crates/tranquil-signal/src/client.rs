@@ -8,11 +8,15 @@ use presage::libsignal_service::configuration::SignalServers;
 use presage::manager::Registered;
 use presage::proto::DataMessage;
 use presage::store::Store;
+#[cfg(feature = "postgres")]
 use sqlx::PgPool;
 use tokio::sync::{RwLock, mpsc, oneshot};
 use tokio_util::sync::CancellationToken;
 use url::Url;
 
+#[cfg(feature = "sqlite")]
+use crate::sqlite_store::SqliteSignalStore;
+#[cfg(feature = "postgres")]
 use crate::store::PgSignalStore;
 
 #[derive(Debug, Clone)]
@@ -215,8 +219,16 @@ pub enum SignalError {
     Runtime(String),
 }
 
+#[cfg(feature = "postgres")]
 impl From<crate::store::PgStoreError> for SignalError {
     fn from(e: crate::store::PgStoreError) -> Self {
+        Self::Store(e.to_string())
+    }
+}
+
+#[cfg(feature = "sqlite")]
+impl From<crate::sqlite_store::SqliteStoreError> for SignalError {
+    fn from(e: crate::sqlite_store::SqliteStoreError) -> Self {
         Self::Store(e.to_string())
     }
 }
@@ -360,8 +372,17 @@ impl SignalClient {
             .ok()
     }
 
+    #[cfg(feature = "postgres")]
     pub async fn from_pool(db: &PgPool, shutdown: CancellationToken) -> Option<Self> {
         Self::from_store(PgSignalStore::new(db.clone()), shutdown).await
+    }
+
+    #[cfg(feature = "sqlite")]
+    pub async fn from_sqlite_pool(
+        db: &sqlx::SqlitePool,
+        shutdown: CancellationToken,
+    ) -> Option<Self> {
+        Self::from_store(SqliteSignalStore::new(db.clone()), shutdown).await
     }
 
     async fn worker_loop<S: Store>(
@@ -554,6 +575,7 @@ impl SignalClient {
         })
     }
 
+    #[cfg(feature = "postgres")]
     pub async fn link_device(
         db: &PgPool,
         device_name: DeviceName,

@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT uk.key_bytes, uk.encryption_version\n               FROM user_keys uk\n               JOIN users u ON uk.user_id = u.id\n               WHERE u.did = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "key_bytes",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "encryption_version",
+        "ordinal": 1,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "84a325b4a7664c2a58b2c661dcceef741a890eb0f013ed985efe64237fc4e9a9"
+}

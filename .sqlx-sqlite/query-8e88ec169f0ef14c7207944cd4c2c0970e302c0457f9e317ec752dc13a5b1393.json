@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT rb.blob_cid, rb.record_uri\n               FROM record_blobs rb\n               LEFT JOIN blobs b ON rb.blob_cid = b.cid\n               WHERE rb.repo_id = $1 AND b.cid IS NULL AND rb.blob_cid > $2\n               ORDER BY rb.blob_cid\n               LIMIT $3",
+  "describe": {
+    "columns": [
+      {
+        "name": "blob_cid",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "record_uri",
+        "ordinal": 1,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "8e88ec169f0ef14c7207944cd4c2c0970e302c0457f9e317ec752dc13a5b1393"
+}

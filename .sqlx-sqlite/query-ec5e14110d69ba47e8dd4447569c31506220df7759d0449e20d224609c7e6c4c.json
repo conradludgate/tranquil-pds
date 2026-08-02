@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT handle FROM users WHERE did = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "handle",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ec5e14110d69ba47e8dd4447569c31506220df7759d0449e20d224609c7e6c4c"
+}

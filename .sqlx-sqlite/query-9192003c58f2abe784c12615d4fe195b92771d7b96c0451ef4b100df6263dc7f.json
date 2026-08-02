@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE external_identities\n            SET provider_username = COALESCE($2, provider_username),\n                provider_email = COALESCE($3, provider_email),\n                last_login_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),\n                updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')\n            WHERE id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "9192003c58f2abe784c12615d4fe195b92771d7b96c0451ef4b100df6263dc7f"
+}

@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT u.did, u.handle, icu.used_at\n               FROM invite_code_uses icu\n               JOIN users u ON icu.used_by_user = u.id\n               WHERE icu.code = $1\n               ORDER BY icu.used_at DESC",
+  "describe": {
+    "columns": [
+      {
+        "name": "did",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "handle",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "used_at",
+        "ordinal": 2,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "5ac108c8ea7524366f96c336309089a3c364f9f8a821ae4a0591966e9314a4c8"
+}

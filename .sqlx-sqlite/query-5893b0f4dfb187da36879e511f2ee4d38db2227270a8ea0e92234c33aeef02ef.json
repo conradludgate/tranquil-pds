@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT COALESCE(SUM(size_bytes), 0) as \"total!\" FROM blobs",
+  "describe": {
+    "columns": [
+      {
+        "name": "total!",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5893b0f4dfb187da36879e511f2ee4d38db2227270a8ea0e92234c33aeef02ef"
+}

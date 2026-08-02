@@ -1,0 +1,68 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, did, password_hash, deactivated_at, takedown_ref,\n                      email_verified, discord_verified, telegram_verified, signal_verified\n               FROM users\n               WHERE did = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "did",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "password_hash",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "deactivated_at",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "takedown_ref",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "email_verified",
+        "ordinal": 5,
+        "type_info": "Integer"
+      },
+      {
+        "name": "discord_verified",
+        "ordinal": 6,
+        "type_info": "Integer"
+      },
+      {
+        "name": "telegram_verified",
+        "ordinal": 7,
+        "type_info": "Integer"
+      },
+      {
+        "name": "signal_verified",
+        "ordinal": 8,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "c7113e80576e7509dfd0addead7af4be268aad9229d0017eb23ccaa6c1bdadde"
+}

@@ -5,15 +5,18 @@ use jacquard_repo::repo::CommitData;
 use jacquard_repo::storage::BlockStore;
 use multihash::Multihash;
 use sha2::{Digest, Sha256};
+#[cfg(feature = "postgres")]
 use sqlx::PgPool;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
 
+#[cfg(feature = "postgres")]
 #[derive(Clone)]
 pub struct PostgresBlockStore {
     pool: PgPool,
 }
 
+#[cfg(feature = "postgres")]
 impl PostgresBlockStore {
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
@@ -24,6 +27,7 @@ impl PostgresBlockStore {
     }
 }
 
+#[cfg(feature = "postgres")]
 impl BlockStore for PostgresBlockStore {
     async fn get(&self, cid: &Cid) -> Result<Option<Bytes>, RepoError> {
         let cid_bytes = cid.to_bytes();

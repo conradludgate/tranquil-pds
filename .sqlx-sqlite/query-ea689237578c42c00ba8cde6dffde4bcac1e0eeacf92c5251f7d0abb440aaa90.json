@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, private_key_bytes\n               FROM reserved_signing_keys\n               WHERE public_key_did_key = $1\n                 AND used_at IS NULL\n                 AND expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now')\n              ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "private_key_bytes",
+        "ordinal": 1,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false
+    ]
+  },
+  "hash": "ea689237578c42c00ba8cde6dffde4bcac1e0eeacf92c5251f7d0abb440aaa90"
+}

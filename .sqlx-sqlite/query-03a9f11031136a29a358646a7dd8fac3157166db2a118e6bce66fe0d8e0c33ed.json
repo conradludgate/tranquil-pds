@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT CAST(cid AS TEXT) as \"cid!: String\" FROM blobs\n               WHERE created_by_user = $1 AND cid > $2\n               ORDER BY cid ASC\n               LIMIT $3",
+  "describe": {
+    "columns": [
+      {
+        "name": "cid!: String",
+        "ordinal": 0,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "03a9f11031136a29a358646a7dd8fac3157166db2a118e6bce66fe0d8e0c33ed"
+}

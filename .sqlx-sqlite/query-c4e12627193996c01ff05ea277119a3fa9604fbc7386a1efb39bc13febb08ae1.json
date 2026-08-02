@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO blobs (cid, mime_type, size_bytes, created_by_user, storage_key)\n               VALUES ($1, $2, $3, $4, $5)\n               ON CONFLICT (cid) DO NOTHING RETURNING CAST(cid AS TEXT) as \"cid!: String\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "cid!: String",
+        "ordinal": 0,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "c4e12627193996c01ff05ea277119a3fa9604fbc7386a1efb39bc13febb08ae1"
+}

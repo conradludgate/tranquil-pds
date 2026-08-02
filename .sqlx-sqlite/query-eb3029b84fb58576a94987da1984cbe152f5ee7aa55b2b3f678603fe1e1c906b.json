@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, did, preferred_comms_channel as \"preferred_comms_channel: CommsChannel\", password_reset_code_expires_at FROM users WHERE password_reset_code = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "did",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "preferred_comms_channel: CommsChannel",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "password_reset_code_expires_at",
+        "ordinal": 3,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "eb3029b84fb58576a94987da1984cbe152f5ee7aa55b2b3f678603fe1e1c906b"
+}

@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT\n                email_verified,\n                discord_verified,\n                telegram_verified,\n                signal_verified\n            FROM users\n            WHERE did = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "email_verified",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "discord_verified",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "telegram_verified",
+        "ordinal": 2,
+        "type_info": "Integer"
+      },
+      {
+        "name": "signal_verified",
+        "ordinal": 3,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e0ad4ac7c419243b67d61adc4bf064fa4b7d2dc99d39b2c40ddef1038a108433"
+}

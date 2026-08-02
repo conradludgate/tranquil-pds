@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT DISTINCT CAST(b.cid AS TEXT) as \"cid!: String\", b.storage_key, b.mime_type\n               FROM blobs b\n               JOIN record_blobs rb ON rb.blob_cid = b.cid\n               WHERE rb.repo_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "cid!: String",
+        "ordinal": 0,
+        "type_info": "Null"
+      },
+      {
+        "name": "storage_key",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "mime_type",
+        "ordinal": 2,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      null,
+      false,
+      false
+    ]
+  },
+  "hash": "50c45d0b095a3e3e0d45d4ebc6e4b079190f1e4ddf316f5d59295fcd99ea47ee"
+}

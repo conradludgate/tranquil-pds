@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT handle FROM users WHERE LOWER(email) = LOWER($1) AND deactivated_at IS NULL ORDER BY created_at DESC",
+  "describe": {
+    "columns": [
+      {
+        "name": "handle",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1bed07000aff39b721c84bfa415f1891605f6561953374e6cae6af66dcecca66"
+}

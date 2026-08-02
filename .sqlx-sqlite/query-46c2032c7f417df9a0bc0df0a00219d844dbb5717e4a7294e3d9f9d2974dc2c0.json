@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO account_preferences (user_id, name, value_json)\n               SELECT $1, $2, $3\n               WHERE NOT EXISTS (\n                   SELECT 1 FROM account_preferences WHERE user_id = $1 AND name = $2\n               )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "46c2032c7f417df9a0bc0df0a00219d844dbb5717e4a7294e3d9f9d2974dc2c0"
+}

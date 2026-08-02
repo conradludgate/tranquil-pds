@@ -1,0 +1,104 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT id, did, token_id,\n                   created_at as \"created_at!: DateTime<Utc>\",\n                   updated_at as \"updated_at!: DateTime<Utc>\",\n                   expires_at as \"expires_at!: DateTime<Utc>\", client_id, client_auth,\n                   device_id, parameters, details, code, current_refresh_token, scope, controller_did\n            FROM oauth_token\n            WHERE current_refresh_token = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "did",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "token_id",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at!: DateTime<Utc>",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "updated_at!: DateTime<Utc>",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "expires_at!: DateTime<Utc>",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "client_id",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "client_auth",
+        "ordinal": 7,
+        "type_info": "Text"
+      },
+      {
+        "name": "device_id",
+        "ordinal": 8,
+        "type_info": "Text"
+      },
+      {
+        "name": "parameters",
+        "ordinal": 9,
+        "type_info": "Text"
+      },
+      {
+        "name": "details",
+        "ordinal": 10,
+        "type_info": "Text"
+      },
+      {
+        "name": "code",
+        "ordinal": 11,
+        "type_info": "Text"
+      },
+      {
+        "name": "current_refresh_token",
+        "ordinal": 12,
+        "type_info": "Text"
+      },
+      {
+        "name": "scope",
+        "ordinal": 13,
+        "type_info": "Text"
+      },
+      {
+        "name": "controller_did",
+        "ordinal": 14,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "ee268ca71a492dc8fc57ee5f9e0165792e8ec2a28558e6c2e1285d4465d60f3a"
+}

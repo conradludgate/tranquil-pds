@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT MAX(id) FROM signal_pre_keys WHERE identity = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "MAX(id)",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "b558892051ad793b4ae38a76d072e4ea440092663bd0d4ed9d48f5074788157a"
+}

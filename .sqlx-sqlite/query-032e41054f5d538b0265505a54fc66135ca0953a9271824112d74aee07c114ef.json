@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT\n                d.controller_did,\n                u.handle as \"handle?\",\n                d.granted_scopes,\n                CAST(d.granted_at AS TEXT) as \"granted_at!: String\",\n                CAST(CASE WHEN u.did IS NOT NULL\n                     THEN u.deactivated_at IS NULL AND u.takedown_ref IS NULL\n                     ELSE true\n                END AS INTEGER) as \"is_active!: i64\",\n                CAST(u.did IS NOT NULL AS INTEGER) as \"is_local!: i64\"\n            FROM account_delegations d\n            LEFT JOIN users u ON u.did = d.controller_did\n            WHERE d.delegated_did = $1 AND d.revoked_at IS NULL\n            ORDER BY d.granted_at DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "controller_did",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "handle?",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "granted_scopes",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "granted_at!: String",
+        "ordinal": 3,
+        "type_info": "Null"
+      },
+      {
+        "name": "is_active!: i64",
+        "ordinal": 4,
+        "type_info": "Null"
+      },
+      {
+        "name": "is_local!: i64",
+        "ordinal": 5,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "032e41054f5d538b0265505a54fc66135ca0953a9271824112d74aee07c114ef"
+}

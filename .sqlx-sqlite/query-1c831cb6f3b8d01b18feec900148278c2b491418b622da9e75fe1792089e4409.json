@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT access_jti FROM session_tokens WHERE did = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "access_jti",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1c831cb6f3b8d01b18feec900148278c2b491418b622da9e75fe1792089e4409"
+}

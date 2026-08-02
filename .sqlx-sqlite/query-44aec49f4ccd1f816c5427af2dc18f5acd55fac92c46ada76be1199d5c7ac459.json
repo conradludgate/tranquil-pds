@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT access_expires_at FROM session_tokens WHERE did = $1 AND access_jti = $2",
+  "describe": {
+    "columns": [
+      {
+        "name": "access_expires_at",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "44aec49f4ccd1f816c5427af2dc18f5acd55fac92c46ada76be1199d5c7ac459"
+}

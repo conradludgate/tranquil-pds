@@ -6,6 +6,7 @@ license.workspace = true
 
 [features]
 postgres = []
+sqlite = []
 
 [dependencies]
 tranquil-db-traits = { workspace = true }
@@ -20,3 +21,4 @@ tracing = { workspace = true }
 uuid = { workspace = true }
 
 sqlx = { workspace = true }
+tokio = { workspace = true }

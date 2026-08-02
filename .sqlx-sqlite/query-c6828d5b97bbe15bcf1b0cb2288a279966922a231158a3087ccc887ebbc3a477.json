@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT u.did, u.handle, u.email, ad.updated_at as last_used_at\n            FROM oauth_account_device ad\n            JOIN users u ON u.did = ad.did\n            WHERE ad.device_id = $1\n              AND u.deactivated_at IS NULL\n              AND u.takedown_ref IS NULL\n            ORDER BY ad.updated_at DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "did",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "handle",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "email",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "last_used_at",
+        "ordinal": 3,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "c6828d5b97bbe15bcf1b0cb2288a279966922a231158a3087ccc887ebbc3a477"
+}

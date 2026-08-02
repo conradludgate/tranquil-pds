@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO backlinks (uri, path, link_to, repo_id)\n                   VALUES ($1, $2, $3, $4) ON CONFLICT (uri, path) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "26ff55bc6f13697e0f81d52f057d413b8c902d604d7078d7e11892881a259abb"
+}

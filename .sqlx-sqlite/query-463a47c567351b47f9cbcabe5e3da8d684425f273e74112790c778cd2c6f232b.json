@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, did, credential_id, public_key, sign_count, created_at, last_used,\n                      friendly_name, aaguid, transports\n               FROM passkeys WHERE credential_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "did",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "credential_id",
+        "ordinal": 2,
+        "type_info": "Blob"
+      },
+      {
+        "name": "public_key",
+        "ordinal": 3,
+        "type_info": "Blob"
+      },
+      {
+        "name": "sign_count",
+        "ordinal": 4,
+        "type_info": "Integer"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "last_used",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "friendly_name",
+        "ordinal": 7,
+        "type_info": "Text"
+      },
+      {
+        "name": "aaguid",
+        "ordinal": 8,
+        "type_info": "Blob"
+      },
+      {
+        "name": "transports",
+        "ordinal": 9,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "463a47c567351b47f9cbcabe5e3da8d684425f273e74112790c778cd2c6f232b"
+}

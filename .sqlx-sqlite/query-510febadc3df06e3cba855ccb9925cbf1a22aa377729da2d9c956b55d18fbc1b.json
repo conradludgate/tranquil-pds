@@ -1,0 +1,68 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT id as \"id!: Vec<u8>\", did, provider as \"provider: SsoProviderType\", provider_user_id,\n                   provider_username, provider_email,\n                   CAST(created_at AS TEXT) as \"created_at!: String\",\n                   CAST(updated_at AS TEXT) as \"updated_at!: String\",\n                   CAST(last_login_at AS TEXT) as \"last_login_at: String\"\n            FROM external_identities\n            WHERE provider = $1 AND provider_user_id = $2\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!: Vec<u8>",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "did",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "provider: SsoProviderType",
+        "ordinal": 2,
+        "type_info": "Null"
+      },
+      {
+        "name": "provider_user_id",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "provider_username",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "provider_email",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at!: String",
+        "ordinal": 6,
+        "type_info": "Null"
+      },
+      {
+        "name": "updated_at!: String",
+        "ordinal": 7,
+        "type_info": "Null"
+      },
+      {
+        "name": "last_login_at: String",
+        "ordinal": 8,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "510febadc3df06e3cba855ccb9925cbf1a22aa377729da2d9c956b55d18fbc1b"
+}

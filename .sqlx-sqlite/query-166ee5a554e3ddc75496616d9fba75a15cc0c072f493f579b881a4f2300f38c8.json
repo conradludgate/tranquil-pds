@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM signal_kv",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "166ee5a554e3ddc75496616d9fba75a15cc0c072f493f579b881a4f2300f38c8"
+}

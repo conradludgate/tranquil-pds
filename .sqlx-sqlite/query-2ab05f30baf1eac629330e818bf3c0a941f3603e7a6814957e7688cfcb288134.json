@@ -1,0 +1,80 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT CAST(u.used_at AS TEXT) as \"used_at!: String\",\n                   st.id AS \"session_id!: i64\", st.did, st.scope, st.controller_did,\n                   st.access_jti, st.refresh_jti,\n                   CAST(st.access_expires_at AS TEXT) as \"access_expires_at!: String\",\n                   CAST(st.refresh_expires_at AS TEXT) as \"refresh_expires_at!: String\",\n                   k.key_bytes, k.encryption_version\n            FROM used_refresh_tokens u\n            JOIN session_tokens st ON st.id = u.session_id\n            JOIN users us ON st.did = us.did\n            JOIN user_keys k ON us.id = k.user_id\n            WHERE u.refresh_jti = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "used_at!: String",
+        "ordinal": 0,
+        "type_info": "Null"
+      },
+      {
+        "name": "session_id!: i64",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "did",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "scope",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "controller_did",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "access_jti",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "refresh_jti",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "access_expires_at!: String",
+        "ordinal": 7,
+        "type_info": "Null"
+      },
+      {
+        "name": "refresh_expires_at!: String",
+        "ordinal": 8,
+        "type_info": "Null"
+      },
+      {
+        "name": "key_bytes",
+        "ordinal": 9,
+        "type_info": "Blob"
+      },
+      {
+        "name": "encryption_version",
+        "ordinal": 10,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      null,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      null,
+      null,
+      false,
+      true
+    ]
+  },
+  "hash": "2ab05f30baf1eac629330e818bf3c0a941f3603e7a6814957e7688cfcb288134"
+}

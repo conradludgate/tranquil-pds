@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT verified FROM user_totp WHERE did = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "verified",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e670bdc9e1a3ee7f1ad04491d54e6caf56637669a91f8972c0d46a12c8a8b21c"
+}

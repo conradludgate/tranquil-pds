@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO app_passwords (user_id, name, password_hash, privileged, scopes, created_by_controller_did)\n            VALUES ($1, $2, $3, $4, $5, $6)\n            RETURNING id as \"id!: Vec<u8>\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!: Vec<u8>",
+        "ordinal": 0,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "a9ec34db1fcc0fa9f22a7f841cdc5f6c543683aae07bc07f06e5f9077bae036a"
+}

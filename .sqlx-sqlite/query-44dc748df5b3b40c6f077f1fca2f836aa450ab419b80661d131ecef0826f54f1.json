@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT DISTINCT CAST(uri AS TEXT) as \"uri!: String\"\n                   FROM backlinks\n                   WHERE repo_id = $1 AND uri LIKE $2 AND path = $3 AND link_to = $4",
+  "describe": {
+    "columns": [
+      {
+        "name": "uri!: String",
+        "ordinal": 0,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "44dc748df5b3b40c6f077f1fca2f836aa450ab419b80661d131ecef0826f54f1"
+}

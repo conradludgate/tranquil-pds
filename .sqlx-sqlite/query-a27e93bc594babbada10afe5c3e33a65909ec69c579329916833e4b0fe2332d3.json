@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM session_tokens WHERE access_jti = $1 AND did = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "a27e93bc594babbada10afe5c3e33a65909ec69c579329916833e4b0fe2332d3"
+}

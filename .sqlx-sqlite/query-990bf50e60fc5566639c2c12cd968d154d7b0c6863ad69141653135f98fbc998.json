@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT COUNT(*) as \"count!\"\n            FROM plc_operation_tokens t\n            JOIN users u ON t.user_id = u.id\n            WHERE u.did = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "count!",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "990bf50e60fc5566639c2c12cd968d154d7b0c6863ad69141653135f98fbc998"
+}

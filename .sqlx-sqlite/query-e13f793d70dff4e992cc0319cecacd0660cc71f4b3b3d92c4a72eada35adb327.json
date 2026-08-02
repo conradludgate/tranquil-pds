@@ -1,0 +1,56 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT did, handle, email, created_at, email_verified, deactivated_at, invites_disabled\n               FROM users\n               WHERE ($1 IS NULL OR did > $1)\n                 AND ($2 IS NULL OR email LIKE $2)\n                 AND ($3 IS NULL OR handle LIKE $3)\n               ORDER BY did ASC\n               LIMIT $4",
+  "describe": {
+    "columns": [
+      {
+        "name": "did",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "handle",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "email",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "email_verified",
+        "ordinal": 4,
+        "type_info": "Integer"
+      },
+      {
+        "name": "deactivated_at",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "invites_disabled",
+        "ordinal": 6,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "e13f793d70dff4e992cc0319cecacd0660cc71f4b3b3d92c4a72eada35adb327"
+}

@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE users SET discord_id = $2, discord_verified = TRUE, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE LOWER(discord_username) = LOWER($1) AND discord_username IS NOT NULL AND handle = $3 RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "c48c982e137f26140b8463578b53b3f20619d845554cec64d5cf09fcfe44e577"
+}

@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT DISTINCT CAST(COALESCE(je.value, '') AS TEXT) as \"cid!: String\"\n               FROM repo_seq, json_each(repo_seq.blobs) AS je\n               WHERE did = $1 AND rev > $2 AND blobs IS NOT NULL",
+  "describe": {
+    "columns": [
+      {
+        "name": "cid!: String",
+        "ordinal": 0,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "217eab2d6c34e560fd6dec265a3f8eb04578dd9459f371e9521860f123e7ba48"
+}

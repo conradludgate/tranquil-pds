@@ -156,6 +156,9 @@ pub struct TranquilConfig {
 
     #[config(nested)]
     pub scheduled: ScheduledConfig,
+
+    #[config(nested)]
+    pub gitops: GitOpsConfig,
 }
 
 impl TranquilConfig {
@@ -284,6 +287,41 @@ impl TranquilConfig {
         // -- repo backend -----------------------------------------------------
         if let Err(e) = self.storage.repo_backend.parse::<RepoBackend>() {
             errors.push(e);
+        }
+
+        // -- GitOps sources ---------------------------------------------------
+        let mut source_names = std::collections::HashSet::new();
+        for source_spec in &self.gitops.sources {
+            let source = match GitOpsSourceConfig::parse(source_spec) {
+                Ok(source) => source,
+                Err(error) => {
+                    errors.push(format!("gitops source {source_spec:?}: {error}"));
+                    continue;
+                }
+            };
+            if source.name.trim().is_empty() {
+                errors.push("gitops.sources.name must not be empty".to_string());
+            } else if !source_names.insert(source.name.clone()) {
+                errors.push(format!(
+                    "gitops.sources contains duplicate source name {:?}",
+                    source.name
+                ));
+            }
+            if source.path.trim().is_empty() {
+                errors.push(format!(
+                    "gitops source {:?} path must not be empty",
+                    source.name
+                ));
+            }
+            if source.did.trim().is_empty() {
+                errors.push(format!(
+                    "gitops source {:?} did must not be empty",
+                    source.name
+                ));
+            }
+        }
+        if self.gitops.scan_interval_secs == 0 {
+            errors.push("gitops.scan_interval_secs must be at least 1".to_string());
         }
 
         // -- tranquil-store ---------------------------------------------------
@@ -597,7 +635,8 @@ pub struct FrontendConfig {
 #[derive(Debug, Config)]
 #[config(layer_attr(serde(deny_unknown_fields)))]
 pub struct DatabaseConfig {
-    /// PostgreSQL connection URL.
+    /// Database connection URL. Use a PostgreSQL URL for the Postgres backend
+    /// or a `sqlite://...` URL for the SQLite backend.
     #[config(env = "DATABASE_URL")]
     pub url: String,
 
@@ -717,6 +756,7 @@ impl SecretsConfig {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RepoBackend {
     Postgres,
+    Sqlite,
     TranquilStore,
 }
 
@@ -726,9 +766,10 @@ impl std::str::FromStr for RepoBackend {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "postgres" => Ok(Self::Postgres),
+            "sqlite" => Ok(Self::Sqlite),
             "tranquil-store" => Ok(Self::TranquilStore),
             other => Err(format!(
-                "unknown repo backend \"{other}\", expected \"postgres\" or \"tranquil-store\""
+                "unknown repo backend \"{other}\", expected \"postgres\", \"sqlite\", or \"tranquil-store\""
             )),
         }
     }
@@ -738,6 +779,7 @@ impl fmt::Display for RepoBackend {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Postgres => f.write_str("postgres"),
+            Self::Sqlite => f.write_str("sqlite"),
             Self::TranquilStore => f.write_str("tranquil-store"),
         }
     }
@@ -762,7 +804,7 @@ pub struct StorageConfig {
     #[config(env = "S3_ENDPOINT")]
     pub s3_endpoint: Option<String>,
 
-    /// Repository backend: `postgres` by default, or `tranquil-store`, our embedded db.
+    /// Repository backend: `postgres` by default, `sqlite`, or `tranquil-store`, our embedded db.
     /// tranquil-store is EXPERIMENTAL!!!! RISK OF TOTAL DATA LOSS.
     #[config(env = "REPO_BACKEND", default = "postgres")]
     pub repo_backend: String,
@@ -1566,6 +1608,48 @@ pub struct ScheduledConfig {
 
 #[derive(Debug, Config)]
 #[config(layer_attr(serde(deny_unknown_fields)))]
+pub struct GitOpsConfig {
+    /// How often each mounted source directory is scanned.
+    #[config(env = "GITOPS_SCAN_INTERVAL_SECS", default = 30)]
+    pub scan_interval_secs: u64,
+
+    /// File-backed sources reconciled into PDS repositories. Each entry is
+    /// `name|path|did`; multiple entries may target the same DID.
+    #[config(env = "GITOPS_SOURCES", parse_env = split_comma_list, default = [])]
+    pub sources: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct GitOpsSourceConfig {
+    /// Stable source name used for durable ownership tracking.
+    pub name: String,
+
+    /// Directory containing collection/rkey.json files.
+    pub path: String,
+
+    /// DID of the local PDS account that owns the records.
+    pub did: String,
+}
+
+impl GitOpsSourceConfig {
+    pub fn parse(spec: &str) -> Result<Self, String> {
+        let mut fields = spec.splitn(3, '|');
+        let name = fields.next().unwrap_or_default().trim();
+        let path = fields.next().unwrap_or_default().trim();
+        let did = fields.next().unwrap_or_default().trim();
+        if name.is_empty() || path.is_empty() || did.is_empty() {
+            return Err("expected name|path|did".to_string());
+        }
+        Ok(Self {
+            name: name.to_string(),
+            path: path.to_string(),
+            did: did.to_string(),
+        })
+    }
+}
+
+#[derive(Debug, Config)]
+#[config(layer_attr(serde(deny_unknown_fields)))]
 pub struct TranquilStoreConfig {
     /// Directory for tranquil-store data: the metastore, eventlog, and blockstore.
     #[config(
@@ -1623,6 +1707,27 @@ pub fn template() -> String {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn gitops_source_spec_requires_name_path_and_did() {
+        let source = GitOpsSourceConfig::parse(" blog | /sources/blog | did:plc:example ")
+            .expect("valid GitOps source");
+        assert_eq!(source.name, "blog");
+        assert_eq!(source.path, "/sources/blog");
+        assert_eq!(source.did, "did:plc:example");
+
+        assert!(GitOpsSourceConfig::parse("blog|/sources/blog").is_err());
+        assert!(GitOpsSourceConfig::parse("|/sources/blog|did:plc:example").is_err());
+    }
+
+    #[test]
+    fn repo_backend_supports_sqlite() {
+        assert_eq!(
+            "sqlite".parse::<RepoBackend>().unwrap(),
+            RepoBackend::Sqlite
+        );
+        assert_eq!(RepoBackend::Sqlite.to_string(), "sqlite");
+    }
+
     use super::*;
 
     fn seed_required_env() {

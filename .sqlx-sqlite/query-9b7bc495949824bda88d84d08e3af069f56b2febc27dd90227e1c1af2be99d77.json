@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT id as \"id!: Vec<u8>\", user_id as \"user_id!: Vec<u8>\", name, password_hash,\n                   CAST(created_at AS TEXT) as \"created_at!: String\", privileged, scopes, created_by_controller_did\n            FROM app_passwords\n            WHERE user_id = $1 AND name = $2\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!: Vec<u8>",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "user_id!: Vec<u8>",
+        "ordinal": 1,
+        "type_info": "Blob"
+      },
+      {
+        "name": "name",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "password_hash",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at!: String",
+        "ordinal": 4,
+        "type_info": "Null"
+      },
+      {
+        "name": "privileged",
+        "ordinal": 5,
+        "type_info": "Integer"
+      },
+      {
+        "name": "scopes",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_by_controller_did",
+        "ordinal": 7,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false,
+      null,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "9b7bc495949824bda88d84d08e3af069f56b2febc27dd90227e1c1af2be99d77"
+}

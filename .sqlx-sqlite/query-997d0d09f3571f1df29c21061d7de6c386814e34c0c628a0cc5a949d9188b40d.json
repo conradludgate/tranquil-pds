@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT current_refresh_token FROM oauth_token WHERE id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "current_refresh_token",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "997d0d09f3571f1df29c21061d7de6c386814e34c0c628a0cc5a949d9188b40d"
+}

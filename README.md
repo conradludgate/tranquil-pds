@@ -20,7 +20,7 @@ It is a superset of the reference PDS, including:
 - account delegation: letting others manage an account with configurable permission levels
 - a built-in web UI for account management, repo browsing, and admin
 
-Unlike the ref PDS, Tranquil is a single binary with no nodejs runtime. That said, at time of writing, Tranquil does require postgres running separately.
+Unlike the ref PDS, Tranquil is a single binary with no nodejs runtime. Tranquil supports PostgreSQL and SQLite repository backends; SQLite is a good fit for a single-node deployment with Litestream backups.
 
 ## Quick Start
 
@@ -58,7 +58,7 @@ Nix users can enter a devshell with `nix develop`, or `direnv allow` to auto-ent
 cp example.toml config.toml
 ```
 
-Edit `config.toml` with your values and generate secrets with `openssl rand -base64 48`. Set the postgres password to match `docker-compose.prod.yaml`. nginx needs a TLS certificate before it starts, so follow the wildcard cert steps in the [Containers guide](docs/2_INSTALL_CONTAINERS.md).
+Edit `config.toml` with your values and generate secrets with `openssl rand -base64 48`. For PostgreSQL, set the database password to match `docker-compose.prod.yaml`; for a single-node SQLite deployment, see the [SQLite installation guide](docs/6_INSTALL_USING_SQLITE.md). nginx needs a TLS certificate before it starts, so follow the wildcard cert steps in the [Containers guide](docs/2_INSTALL_CONTAINERS.md).
 
 ```bash
 podman-compose -f docker-compose.prod.yaml up -d
@@ -68,6 +68,8 @@ podman-compose -f docker-compose.prod.yaml up -d
 
 - [Nix](docs/2_INSTALL_NIX.md)
 - [Containers](docs/2_INSTALL_CONTAINERS.md)
+- [SQLite with Litestream](docs/6_INSTALL_USING_SQLITE.md)
+- [GitOps file sources](docs/7_GITOPS_FILE_SOURCES.md)
 
 ## Community
 

@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT (migrated_to_pds IS NOT NULL AND deactivated_at IS NOT NULL) as \"migrated!: bool\" FROM users WHERE did = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "migrated!: bool",
+        "ordinal": 0,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "d91efadf413a90b907727cffd1ce13eb68c3ef017a34e69629df1255de312317"
+}

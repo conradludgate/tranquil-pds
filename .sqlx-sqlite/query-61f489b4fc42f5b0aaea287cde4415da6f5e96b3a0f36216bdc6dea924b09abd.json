@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT token, did, expires_at FROM account_deletion_requests WHERE did = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "token",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "did",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "expires_at",
+        "ordinal": 2,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "61f489b4fc42f5b0aaea287cde4415da6f5e96b3a0f36216bdc6dea924b09abd"
+}

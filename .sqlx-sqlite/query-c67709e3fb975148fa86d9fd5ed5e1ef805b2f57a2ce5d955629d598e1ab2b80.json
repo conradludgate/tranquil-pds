@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT key FROM signal_profile_keys WHERE uuid = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "key",
+        "ordinal": 0,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c67709e3fb975148fa86d9fd5ed5e1ef805b2f57a2ce5d955629d598e1ab2b80"
+}

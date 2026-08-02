@@ -8,6 +8,7 @@ use metrics::{counter, gauge, histogram};
 use metrics_exporter_prometheus::{PrometheusBuilder, PrometheusHandle};
 use std::sync::OnceLock;
 use std::time::Instant;
+use tracing::{Instrument, Span};
 
 static PROMETHEUS_HANDLE: OnceLock<PrometheusHandle> = OnceLock::new();
 
@@ -72,6 +73,18 @@ fn describe_metrics() {
         "tranquil_pds_db_query_duration_seconds",
         "Database query duration in seconds"
     );
+    metrics::describe_counter!(
+        "tranquil_pds_gitops_scans_total",
+        "Total number of GitOps source scans"
+    );
+    metrics::describe_counter!(
+        "tranquil_pds_gitops_records_total",
+        "Total number of records observed during GitOps scans"
+    );
+    metrics::describe_histogram!(
+        "tranquil_pds_gitops_scan_duration_seconds",
+        "GitOps source scan duration in seconds"
+    );
 }
 
 pub async fn metrics_handler() -> impl IntoResponse {
@@ -96,28 +109,60 @@ pub async fn metrics_middleware(request: Request<Body>, next: Next) -> Response 
     let start = Instant::now();
     let method = request.method().to_string();
     let path = normalize_path(request.uri().path());
+    let server_span = Span::current();
+    let xrpc_span = make_xrpc_span(&method, &path);
 
-    let response = next.run(request).await;
+    let response = async move {
+        let response = next.run(request).await;
 
-    let duration = start.elapsed().as_secs_f64();
-    let status = response.status().as_u16().to_string();
+        let duration = start.elapsed().as_secs_f64();
+        let status_code = response.status().as_u16();
+        let status = status_code.to_string();
+        // `axum-tracing-opentelemetry` declares this as an integer-valued
+        // semantic-convention attribute. Keep this recording here as well so
+        // the field remains correct if the middleware is reused independently.
+        server_span.record("http.response.status_code", i64::from(status_code));
 
-    counter!(
-        "tranquil_pds_http_requests_total",
-        "method" => method.clone(),
-        "path" => path.clone(),
-        "status" => status.clone()
-    )
-    .increment(1);
+        counter!(
+            "tranquil_pds_http_requests_total",
+            "method" => method.clone(),
+            "path" => path.clone(),
+            "status" => status.clone()
+        )
+        .increment(1);
 
-    histogram!(
-        "tranquil_pds_http_request_duration_seconds",
-        "method" => method,
-        "path" => path
-    )
-    .record(duration);
+        histogram!(
+            "tranquil_pds_http_request_duration_seconds",
+            "method" => method,
+            "path" => path
+        )
+        .record(duration);
+
+        response
+    }
+    .instrument(xrpc_span)
+    .await;
 
     response
+}
+
+fn make_xrpc_span(method: &str, path: &str) -> Span {
+    let Some(nsid) = path.strip_prefix("/xrpc/").filter(|nsid| !nsid.is_empty()) else {
+        return Span::none();
+    };
+
+    let kind = match method {
+        "GET" => "query",
+        "POST" => "procedure",
+        _ => "other",
+    };
+
+    tracing::info_span!(
+        "xrpc.request",
+        "atproto.xrpc.nsid" = %nsid,
+        "atproto.xrpc.kind" = %kind,
+        "atproto.xrpc.http_method" = %method,
+    )
 }
 
 fn normalize_path(path: &str) -> String {
@@ -190,6 +235,26 @@ pub fn record_db_query(query_type: &str, duration_seconds: f64) {
     histogram!(
         "tranquil_pds_db_query_duration_seconds",
         "query_type" => query_type.to_string()
+    )
+    .record(duration_seconds);
+}
+
+pub fn record_gitops_scan(source: &str, status: &str, record_count: usize, duration_seconds: f64) {
+    counter!(
+        "tranquil_pds_gitops_scans_total",
+        "source" => source.to_string(),
+        "status" => status.to_string()
+    )
+    .increment(1);
+    counter!(
+        "tranquil_pds_gitops_records_total",
+        "source" => source.to_string(),
+        "status" => status.to_string()
+    )
+    .increment(record_count as u64);
+    histogram!(
+        "tranquil_pds_gitops_scan_duration_seconds",
+        "source" => source.to_string()
     )
     .record(duration_seconds);
 }

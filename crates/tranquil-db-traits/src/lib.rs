@@ -3,6 +3,7 @@ mod blob;
 mod channel_verification;
 mod delegation;
 mod error;
+mod gitops;
 mod infra;
 mod invite_code;
 mod oauth;
@@ -21,6 +22,7 @@ pub use delegation::{
     DelegationRepository,
 };
 pub use error::{ColumnRef, DbError};
+pub use gitops::{GitOpsRecord, GitOpsRecordClaim, GitOpsRepository, GitOpsSource};
 pub use infra::{
     AdminAccountInfo, CommsChannel, CommsStatus, CommsType, DeletionRequest,
     DeletionRequestWithToken, InfraRepository, InviteCodeInfo, InviteCodeRow, InviteCodeSortOrder,

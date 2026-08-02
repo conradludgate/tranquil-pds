@@ -6,10 +6,14 @@ use crate::did::DidResolver;
 use crate::oauth::client::CrossPdsOAuthClient;
 use crate::plc::PlcClient;
 use crate::rate_limit::RateLimiters;
+#[cfg(feature = "postgres")]
 use crate::repo::PostgresBlockStore;
+#[cfg(feature = "sqlite")]
+use crate::repo::SqliteBlockStore;
 use crate::repo_write_lock::RepoWriteLocks;
 use crate::sso::{SsoConfig, SsoManager};
 use crate::storage::{BlobStorage, create_blob_storage};
+#[cfg(feature = "postgres")]
 use sqlx::PgPool;
 use std::error::Error;
 use std::path::PathBuf;
@@ -17,7 +21,11 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::broadcast;
 use tokio_util::sync::CancellationToken;
+#[cfg(feature = "postgres")]
 use tranquil_db::PostgresRepositories;
+use tranquil_db::RepositorySet;
+#[cfg(feature = "sqlite")]
+use tranquil_db::{SqliteDatabase, SqliteRepositories};
 use tranquil_db_traits::SequencedEvent;
 
 static RATE_LIMITING_DISABLED: AtomicBool = AtomicBool::new(false);
@@ -36,7 +44,7 @@ pub fn set_rate_limiting_disabled(disabled: bool) {
 
 #[derive(Clone)]
 pub struct AppState {
-    pub repos: Arc<PostgresRepositories>,
+    pub repos: Arc<RepositorySet>,
     pub block_store: crate::repo::AnyBlockStore,
     pub blob_store: Arc<dyn BlobStorage>,
     pub firehose_tx: broadcast::Sender<SequencedEvent>,
@@ -223,6 +231,7 @@ impl AppState {
                 tracing::info!("tranquil-store repo backend active. EXPERIMENTAL!");
                 Self::from_store(shutdown).await
             }
+            #[cfg(feature = "postgres")]
             tranquil_config::RepoBackend::Postgres => {
                 let database_url = &cfg.database.url;
                 let max_connections = cfg.database.max_connections;
@@ -253,6 +262,30 @@ impl AppState {
 
                 Self::from_db(db, shutdown).await
             }
+            #[cfg(not(feature = "postgres"))]
+            tranquil_config::RepoBackend::Postgres => {
+                return Err("Postgres support is not enabled in this build".into());
+            }
+            #[cfg(feature = "sqlite")]
+            tranquil_config::RepoBackend::Sqlite => {
+                tracing::info!("Configuring SQLite database pool for Litestream");
+                let db = SqliteDatabase::connect(
+                    &cfg.database.url,
+                    cfg.database.max_connections,
+                    cfg.database.min_connections,
+                    cfg.database.acquire_timeout_secs,
+                )
+                .await
+                .map_err(|e| format!("Failed to connect to SQLite: {e}"))?;
+                db.migrate()
+                    .await
+                    .map_err(|e| format!("Failed to run SQLite migrations: {e}"))?;
+                Self::from_sqlite_db(db, shutdown).await
+            }
+            #[cfg(not(feature = "sqlite"))]
+            tranquil_config::RepoBackend::Sqlite => {
+                return Err("SQLite support is not enabled in this build".into());
+            }
         };
 
         if cfg.server.invite_code_required && state.repos.user.count_users().await.unwrap_or(1) == 0
@@ -268,10 +301,11 @@ impl AppState {
         Ok(state)
     }
 
+    #[cfg(feature = "postgres")]
     pub async fn from_db(db: PgPool, shutdown: CancellationToken) -> Self {
         let cfg = tranquil_config::get();
         let (repos, block_store, signal_store_provider, eventlog_segments_dir): (
-            PostgresRepositories,
+            RepositorySet,
             crate::repo::AnyBlockStore,
             Option<Arc<dyn tranquil_signal::SignalStoreProvider>>,
             Option<PathBuf>,
@@ -279,7 +313,7 @@ impl AppState {
             true => {
                 let wiring = wire_tranquil_store(&cfg.tranquil_store, shutdown.clone());
                 (
-                    wiring.repos,
+                    wiring.repos.into(),
                     crate::repo::AnyBlockStore::TranquilStore(wiring.blockstore),
                     Some(wiring.signal_provider),
                     Some(wiring.segments_dir),
@@ -290,7 +324,7 @@ impl AppState {
                 let provider: Arc<dyn tranquil_signal::SignalStoreProvider> =
                     Arc::new(tranquil_signal::PgSignalStoreProvider { pool: db.clone() });
                 (
-                    repos,
+                    repos.into(),
                     crate::repo::AnyBlockStore::Postgres(PostgresBlockStore::new(db)),
                     Some(provider),
                     None,
@@ -303,6 +337,23 @@ impl AppState {
             block_store,
             signal_store_provider,
             eventlog_segments_dir,
+            shutdown,
+        )
+        .await
+    }
+
+    #[cfg(feature = "sqlite")]
+    pub async fn from_sqlite_db(db: SqliteDatabase, shutdown: CancellationToken) -> Self {
+        let repos: RepositorySet = SqliteRepositories::new(db.pool.clone()).into();
+        let signal_provider: Arc<dyn tranquil_signal::SignalStoreProvider> =
+            Arc::new(tranquil_signal::SqliteSignalStoreProvider {
+                pool: db.pool.clone(),
+            });
+        Self::build(
+            repos,
+            crate::repo::AnyBlockStore::Sqlite(SqliteBlockStore::new(db.pool)),
+            Some(signal_provider),
+            None,
             shutdown,
         )
         .await
@@ -346,7 +397,7 @@ impl AppState {
     }
 
     async fn build(
-        repos: PostgresRepositories,
+        repos: RepositorySet,
         block_store: crate::repo::AnyBlockStore,
         signal_store_provider: Option<Arc<dyn tranquil_signal::SignalStoreProvider>>,
         eventlog_segments_dir: Option<PathBuf>,
@@ -482,7 +533,7 @@ struct TranquilStoreWiring {
         tranquil_store::SystemClock,
     >,
     signal_provider: Arc<dyn tranquil_signal::SignalStoreProvider>,
-    repos: PostgresRepositories,
+    repos: RepositorySet,
     segments_dir: PathBuf,
 }
 
@@ -698,8 +749,7 @@ fn wire_tranquil_store(
 
     tracing::info!(data_dir = %store_cfg.data_dir, "tranquil-store data directory");
 
-    let repos = PostgresRepositories {
-        pool: None,
+    let repos = RepositorySet {
         repo: Arc::new(client.clone()),
         backlink: Arc::new(client.clone()),
         blob: Arc::new(client.clone()),
@@ -710,6 +760,7 @@ fn wire_tranquil_store(
         delegation: Arc::new(client.clone()),
         sso: Arc::new(client),
         event_notifier: Arc::new(notifier),
+        gitops: None,
     };
 
     let signal_provider: Arc<dyn tranquil_signal::SignalStoreProvider> = Arc::new(

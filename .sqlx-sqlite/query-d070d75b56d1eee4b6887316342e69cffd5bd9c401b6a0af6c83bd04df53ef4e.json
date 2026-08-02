@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO external_identities (did, provider, provider_user_id, provider_username, provider_email)\n            VALUES ($1, $2, $3, $4, $5)\n            RETURNING id as \"id!: Vec<u8>\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!: Vec<u8>",
+        "ordinal": 0,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "d070d75b56d1eee4b6887316342e69cffd5bd9c401b6a0af6c83bd04df53ef4e"
+}

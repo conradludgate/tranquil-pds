@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE blobs SET takedown_ref = $1 WHERE cid = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "41d35cebdf29be500e30ef636ad96450620f71087c174e5a74446fcdb29a2ba8"
+}

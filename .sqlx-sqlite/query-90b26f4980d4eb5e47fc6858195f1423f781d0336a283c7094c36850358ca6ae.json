@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE users SET telegram_chat_id = $2, telegram_verified = TRUE, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE LOWER(telegram_username) = LOWER($1) AND telegram_username IS NOT NULL AND handle = $3 RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "90b26f4980d4eb5e47fc6858195f1423f781d0336a283c7094c36850358ca6ae"
+}

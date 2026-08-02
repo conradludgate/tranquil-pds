@@ -37,7 +37,7 @@ tranquil-infra = { path = "crates/tranquil-infra" }
 tranquil-crypto = { path = "crates/tranquil-crypto" }
 tranquil-storage = { path = "crates/tranquil-storage" }
 tranquil-cache = { path = "crates/tranquil-cache" }
-tranquil-repo = { path = "crates/tranquil-repo" }
+tranquil-repo = { path = "crates/tranquil-repo", default-features = false }
 tranquil-scopes = { path = "crates/tranquil-scopes" }
 tranquil-auth = { path = "crates/tranquil-auth" }
 tranquil-oauth = { path = "crates/tranquil-oauth" }
@@ -50,7 +50,7 @@ tranquil-pds = { path = "crates/tranquil-pds" }
 tranquil-sync = { path = "crates/tranquil-sync" }
 tranquil-oauth-server = { path = "crates/tranquil-oauth-server" }
 tranquil-api = { path = "crates/tranquil-api" }
-tranquil-signal = { path = "crates/tranquil-signal", features = ["fjall-store"] }
+tranquil-signal = { path = "crates/tranquil-signal", default-features = false, features = ["fjall-store"] }
 tranquil-store = { path = "crates/tranquil-store" }
 
 presage = { git = "https://github.com/whisperfish/presage", rev = "fe3ed54c4844ae51c3a9fa49cf80a7816a31a425", default-features = false }
@@ -66,6 +66,7 @@ async-trait = "0.1"
 aws-config = "1.8"
 aws-sdk-s3 = "1.118"
 axum = { version = "0.8", features = ["ws", "macros"] }
+axum-tracing-opentelemetry = { version = "0.38", features = ["tracing_level_info"] }
 base32 = "0.5"
 base64 = "0.22"
 bcrypt = "0.17"
@@ -103,6 +104,9 @@ k256 = { version = "0.13", features = ["ecdsa", "pem", "pkcs8"] }
 metrics = "0.24"
 metrics-exporter-prometheus = { version = "0.16", default-features = false, features = ["http-listener"] }
 multibase = "0.9"
+opentelemetry = "0.32"
+opentelemetry-otlp = { version = "0.32", default-features = false, features = ["trace", "http-proto", "reqwest-blocking-client", "reqwest-rustls"] }
+opentelemetry_sdk = { version = "0.32" }
 parking_lot = "0.12"
 multihash = "0.19"
 p256 = { version = "0.13", features = ["ecdsa"] }
@@ -123,7 +127,7 @@ serde_ipld_dagcbor = "0.6"
 serde_json = "1.0"
 serde_urlencoded = "0.7"
 sha2 = "0.10"
-sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono", "json"] }
+sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "sqlite", "uuid", "chrono", "json"] }
 subtle = "2.5"
 thiserror = "2.0"
 tokio = { version = "1.48", features = ["macros", "rt-multi-thread", "time", "signal", "process", "io-util", "fs"] }
@@ -135,11 +139,12 @@ tower = "0.5"
 tower-http = { version = "0.6", features = ["fs", "cors"] }
 tower-layer = "0.3"
 tracing = "0.1"
-tracing-subscriber = "0.3"
+tracing-opentelemetry = "0.33"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 urlencoding = "2.1"
 uuid = { version = "1.19", features = ["v4", "v5", "v7", "fast-rng", "serde"] }
-webauthn-rs = { version = "0.5", features = ["danger-allow-state-serialisation", "danger-user-presence-only-security-keys", "conditional-ui"] }
-webauthn-rs-proto = "0.5"
+webauthn-rs = { version = "0.6.0-dev", features = ["danger-allow-state-serialisation", "danger-user-presence-only-security-keys", "conditional-ui"] }
+webauthn-rs-proto = "0.6.0-dev"
 x509-parser = "0.18"
 
 ciborium = "0.2"

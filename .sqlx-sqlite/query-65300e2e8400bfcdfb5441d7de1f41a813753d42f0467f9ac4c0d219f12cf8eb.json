@@ -1,0 +1,44 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, handle, recovery_token, recovery_token_expires_at, password_required\n               FROM users WHERE did = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "handle",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "recovery_token",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "recovery_token_expires_at",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "password_required",
+        "ordinal": 4,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "65300e2e8400bfcdfb5441d7de1f41a813753d42f0467f9ac4c0d219f12cf8eb"
+}

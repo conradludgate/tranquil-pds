@@ -9,6 +9,7 @@ pub mod config;
 pub mod crawlers;
 pub mod delegation;
 pub mod did;
+pub mod gitops;
 pub mod handle;
 pub mod image;
 pub mod metrics;
@@ -30,6 +31,7 @@ pub mod validation;
 
 use api::proxy::XrpcProxyLayer;
 use axum::{Json, Router, extract::DefaultBodyLimit, http::Method, middleware, routing::get};
+use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
 use http::StatusCode;
 use serde_json::json;
 use state::AppState;
@@ -93,6 +95,19 @@ pub fn app_with_routes(state: AppState, external: ExternalRoutes) -> Router {
 
     let well_known_router = external.well_known;
 
+    let mut cors_headers = vec![
+        http::header::AUTHORIZATION,
+        http::header::CONTENT_TYPE,
+        http::header::CONTENT_ENCODING,
+        http::header::ACCEPT_ENCODING,
+        http::header::USER_AGENT,
+        util::HEADER_DPOP,
+        util::HEADER_ATPROTO_PROXY,
+        util::HEADER_ATPROTO_ACCEPT_LABELERS,
+    ];
+    #[cfg(feature = "bsky-support")]
+    cors_headers.push(util::HEADER_X_BSKY_TOPICS);
+
     let router = Router::new()
         .nest_service("/xrpc", xrpc_service)
         .nest("/oauth", oauth_router)
@@ -102,21 +117,13 @@ pub fn app_with_routes(state: AppState, external: ExternalRoutes) -> Router {
         .layer(DefaultBodyLimit::max(GENERAL_BODY_LIMIT))
         .layer(axum::middleware::map_response(rewrite_extractor_errors))
         .layer(middleware::from_fn(metrics::metrics_middleware))
+        .layer(OtelInResponseLayer::default())
+        .layer(OtelAxumLayer::default())
         .layer(
             CorsLayer::new()
                 .allow_origin(Any)
                 .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
-                .allow_headers([
-                    http::header::AUTHORIZATION,
-                    http::header::CONTENT_TYPE,
-                    http::header::CONTENT_ENCODING,
-                    http::header::ACCEPT_ENCODING,
-                    http::header::USER_AGENT,
-                    util::HEADER_DPOP,
-                    util::HEADER_ATPROTO_PROXY,
-                    util::HEADER_ATPROTO_ACCEPT_LABELERS,
-                    util::HEADER_X_BSKY_TOPICS,
-                ])
+                .allow_headers(cors_headers)
                 .expose_headers([
                     http::header::WWW_AUTHENTICATE,
                     util::HEADER_DPOP_NONCE,

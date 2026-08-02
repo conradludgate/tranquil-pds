@@ -153,7 +153,8 @@
 #dir = "/var/lib/tranquil-pds/frontend"
 
 [database]
-# PostgreSQL connection URL.
+# Database connection URL. Use a PostgreSQL URL for the postgres backend or a
+# sqlite:// URL for the SQLite backend.
 #
 # Can also be specified via environment variable `DATABASE_URL`.
 #
@@ -240,6 +241,7 @@
 #s3_endpoint =
 
 # Repository backend: `postgres` by default, or `tranquil-store`, our embedded db.
+# Supported values are "postgres", "sqlite", and "tranquil-store".
 # tranquil-store is EXPERIMENTAL!!!! RISK OF TOTAL DATA LOSS.
 #
 # Can also be specified via environment variable `REPO_BACKEND`.
@@ -778,3 +780,18 @@
 #
 # Default value: 3600
 #event_retention_interval_secs = 3600
+
+[gitops]
+# Polling interval for mounted file sources.
+#
+# Can also be specified via environment variable `GITOPS_SCAN_INTERVAL_SECS`.
+#
+# Default value: 30
+#scan_interval_secs = 30
+
+# Each source is `name|path|did`. The directory must contain files in the
+# `collection/rkey.json` layout. Multiple sources may target the same DID.
+#
+# Can also be specified via environment variable `GITOPS_SOURCES` as a
+# comma-separated list.
+#sources = []

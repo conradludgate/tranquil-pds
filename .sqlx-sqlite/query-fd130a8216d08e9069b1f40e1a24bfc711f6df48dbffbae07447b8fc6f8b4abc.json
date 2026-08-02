@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE users SET telegram_chat_id = $2, telegram_verified = TRUE, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')\n                WHERE id = (\n                    SELECT id FROM users\n                    WHERE LOWER(telegram_username) = LOWER($1) AND telegram_username IS NOT NULL AND deactivated_at IS NULL\n                    LIMIT 1\n                ) RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "fd130a8216d08e9069b1f40e1a24bfc711f6df48dbffbae07447b8fc6f8b4abc"
+}
