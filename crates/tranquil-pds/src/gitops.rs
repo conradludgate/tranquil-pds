@@ -460,17 +460,17 @@ fn collect_files(directory: &Path, files: &mut Vec<PathBuf>) -> Result<(), ScanE
         .map_err(|error| ScanError(format!("read directory {}: {error}", directory.display())))?;
     for entry in entries {
         let entry = entry.map_err(|error| ScanError(format!("read directory entry: {error}")))?;
-        // Kubernetes ConfigMap and Secret volumes keep the active payload in a
-        // timestamped directory and expose it through `..data` symlinks. Those
-        // implementation details are not part of the GitOps source layout.
-        if entry.file_name().to_string_lossy().starts_with("..") {
-            continue;
-        }
         let path = entry.path();
         let file_type = entry
             .file_type()
             .map_err(|error| ScanError(format!("inspect {}: {error}", path.display())))?;
         if file_type.is_dir() {
+            // Hidden directories are implementation details rather than part
+            // of the GitOps source layout. This also excludes the timestamped
+            // directories used by Kubernetes ConfigMap and Secret volumes.
+            if entry.file_name().to_string_lossy().starts_with('.') {
+                continue;
+            }
             collect_files(&path, files)?;
         } else if path.is_file() {
             files.push(path);
@@ -511,7 +511,7 @@ mod tests {
     }
 
     #[test]
-    fn ignores_kubernetes_configmap_projection_directories() {
+    fn ignores_hidden_directories() {
         let root = tempfile::tempdir().unwrap();
         let collection = root.path().join("app.example.record");
         fs::create_dir_all(&collection).unwrap();
@@ -521,10 +521,11 @@ mod tests {
         )
         .unwrap();
 
-        let projected = root.path().join("..2026_08_02_19_12_01.123456789");
-        let projected_collection = projected.join("app.example.record");
-        fs::create_dir_all(&projected_collection).unwrap();
-        fs::write(projected_collection.join("invalid.json"), b"not json").unwrap();
+        for directory in [".git", "..2026_08_02_19_12_01.123456789"] {
+            let hidden_collection = root.path().join(directory).join("app.example.record");
+            fs::create_dir_all(&hidden_collection).unwrap();
+            fs::write(hidden_collection.join("invalid.json"), b"not json").unwrap();
+        }
 
         let snapshot = scan_directory(root.path()).unwrap();
         assert_eq!(snapshot.len(), 1);
