@@ -9,6 +9,7 @@ pub mod config;
 pub mod crawlers;
 pub mod delegation;
 pub mod did;
+pub mod gitops;
 pub mod handle;
 pub mod image;
 pub mod metrics;

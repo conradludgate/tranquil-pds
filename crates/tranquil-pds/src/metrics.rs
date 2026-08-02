@@ -72,6 +72,18 @@ fn describe_metrics() {
         "tranquil_pds_db_query_duration_seconds",
         "Database query duration in seconds"
     );
+    metrics::describe_counter!(
+        "tranquil_pds_gitops_scans_total",
+        "Total number of GitOps source scans"
+    );
+    metrics::describe_counter!(
+        "tranquil_pds_gitops_records_total",
+        "Total number of records observed during GitOps scans"
+    );
+    metrics::describe_histogram!(
+        "tranquil_pds_gitops_scan_duration_seconds",
+        "GitOps source scan duration in seconds"
+    );
 }
 
 pub async fn metrics_handler() -> impl IntoResponse {
@@ -190,6 +202,26 @@ pub fn record_db_query(query_type: &str, duration_seconds: f64) {
     histogram!(
         "tranquil_pds_db_query_duration_seconds",
         "query_type" => query_type.to_string()
+    )
+    .record(duration_seconds);
+}
+
+pub fn record_gitops_scan(source: &str, status: &str, record_count: usize, duration_seconds: f64) {
+    counter!(
+        "tranquil_pds_gitops_scans_total",
+        "source" => source.to_string(),
+        "status" => status.to_string()
+    )
+    .increment(1);
+    counter!(
+        "tranquil_pds_gitops_records_total",
+        "source" => source.to_string(),
+        "status" => status.to_string()
+    )
+    .increment(record_count as u64);
+    histogram!(
+        "tranquil_pds_gitops_scan_duration_seconds",
+        "source" => source.to_string()
     )
     .record(duration_seconds);
 }

@@ -25,6 +25,7 @@ pub struct RepositorySet {
     pub backlink: Arc<dyn traits::BacklinkRepository>,
     pub sso: Arc<dyn traits::SsoRepository>,
     pub event_notifier: Arc<dyn traits::RepoEventNotifier>,
+    pub gitops: Option<Arc<dyn traits::GitOpsRepository>>,
 }
 
 #[cfg(feature = "postgres")]
@@ -41,6 +42,7 @@ impl From<PostgresRepositories> for RepositorySet {
             backlink: value.backlink,
             sso: value.sso,
             event_notifier: value.event_notifier,
+            gitops: Some(value.gitops),
         }
     }
 }
@@ -59,6 +61,7 @@ impl From<sqlite::SqliteRepositories> for RepositorySet {
             backlink: value.backlink,
             sso: value.sso,
             event_notifier: value.event_notifier,
+            gitops: Some(value.gitops),
         }
     }
 }

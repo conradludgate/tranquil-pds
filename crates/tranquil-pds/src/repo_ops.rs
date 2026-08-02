@@ -38,6 +38,7 @@ pub enum CommitError {
     CommitParseFailed(String),
     MstOperationFailed(String),
     RecordSerializationFailed(String),
+    InvalidRecord(String),
     InvalidCid(String),
     RecordAlreadyExists(String),
 }
@@ -63,6 +64,7 @@ impl std::fmt::Display for CommitError {
             Self::RecordSerializationFailed(e) => {
                 write!(f, "Failed to serialize record: {}", e)
             }
+            Self::InvalidRecord(e) => write!(f, "Invalid record: {}", e),
             Self::InvalidCid(e) => write!(f, "Invalid CID: {}", e),
             Self::RecordAlreadyExists(key) => write!(f, "Record already exists at {}", key),
         }
@@ -1209,6 +1211,156 @@ pub async fn create_record_internal(
 
     let uri = format!("at://{}/{}/{}", did, collection, rkey);
     Ok((uri, result.commit_cid))
+}
+
+/// Apply a trusted internal upsert without going through the HTTP auth layer.
+/// GitOps uses this after validating that the configured source owns the
+/// target account and record path.
+pub async fn put_record_internal(
+    state: &AppState,
+    did: &Did,
+    collection: &Nsid,
+    rkey: &Rkey,
+    record: &serde_json::Value,
+) -> Result<(String, Cid), CommitError> {
+    let user_id = state
+        .repos
+        .user
+        .get_id_by_did(did)
+        .await
+        .map_err(|e| CommitError::DatabaseError(e.to_string()))?
+        .ok_or(CommitError::UserNotFound)?;
+
+    crate::validation::RecordValidator::new()
+        .validate_with_rkey(record, collection, Some(rkey))
+        .map_err(|e| CommitError::InvalidRecord(e.to_string()))?;
+
+    let to_commit_err = |e: ApiError| CommitError::DatabaseError(format!("{e:?}"));
+    let (ctx, mst) = begin_repo_write(state, user_id, None)
+        .await
+        .map_err(to_commit_err)?;
+    let key = format!("{}/{}", collection, rkey);
+    let previous_cid = mst
+        .get(&key)
+        .await
+        .map_err(|e| CommitError::MstOperationFailed(e.to_string()))?;
+
+    let record_ipld = crate::util::json_to_ipld(record);
+    let record_bytes = serde_ipld_dagcbor::to_vec(&record_ipld)
+        .map_err(|e| CommitError::RecordSerializationFailed(e.to_string()))?;
+    let record_cid = compute_cid(&record_bytes)
+        .map_err(|e| CommitError::RecordSerializationFailed(e.to_string()))?;
+
+    if previous_cid == Some(record_cid) {
+        return Ok((format!("at://{}/{}/{}", did, collection, rkey), record_cid));
+    }
+
+    ctx.tracking_store
+        .put(&record_bytes)
+        .await
+        .map_err(|e| CommitError::BlockStoreFailed(e.to_string()))?;
+    let new_mst = match previous_cid {
+        Some(_) => mst
+            .update(&key, record_cid)
+            .await
+            .map_err(|e| CommitError::MstOperationFailed(e.to_string()))?,
+        None => mst
+            .add(&key, record_cid)
+            .await
+            .map_err(|e| CommitError::MstOperationFailed(e.to_string()))?,
+    };
+
+    let uri = AtUri::from_parts(did, collection, rkey);
+    let op = match previous_cid {
+        Some(prev) => RecordOp::Update {
+            collection: collection.clone(),
+            rkey: rkey.clone(),
+            cid: RecordCid::from(record_cid),
+            prev: RecordCid::from(prev),
+        },
+        None => RecordOp::Create {
+            collection: collection.clone(),
+            rkey: rkey.clone(),
+            cid: RecordCid::from(record_cid),
+        },
+    };
+    finalize_repo_write(
+        state,
+        ctx,
+        new_mst,
+        FinalizeParams {
+            did,
+            user_id,
+            controller_did: None,
+            delegation_detail: None,
+            ops: vec![op],
+            blob_cids: &extract_blob_cids(record),
+            backlinks_to_add: extract_backlinks(&uri, record),
+            backlinks_to_remove: if previous_cid.is_some() {
+                vec![uri.clone()]
+            } else {
+                vec![]
+            },
+        },
+    )
+    .await
+    .map_err(to_commit_err)?;
+
+    Ok((uri.to_string(), record_cid))
+}
+
+pub async fn delete_record_internal(
+    state: &AppState,
+    did: &Did,
+    collection: &Nsid,
+    rkey: &Rkey,
+) -> Result<Option<Cid>, CommitError> {
+    let user_id = state
+        .repos
+        .user
+        .get_id_by_did(did)
+        .await
+        .map_err(|e| CommitError::DatabaseError(e.to_string()))?
+        .ok_or(CommitError::UserNotFound)?;
+    let to_commit_err = |e: ApiError| CommitError::DatabaseError(format!("{e:?}"));
+    let (ctx, mst) = begin_repo_write(state, user_id, None)
+        .await
+        .map_err(to_commit_err)?;
+    let key = format!("{}/{}", collection, rkey);
+    let Some(previous_cid) = mst
+        .get(&key)
+        .await
+        .map_err(|e| CommitError::MstOperationFailed(e.to_string()))?
+    else {
+        return Ok(None);
+    };
+    let new_mst = mst
+        .delete(&key)
+        .await
+        .map_err(|e| CommitError::MstOperationFailed(e.to_string()))?;
+    let uri = AtUri::from_parts(did, collection, rkey);
+    let result = finalize_repo_write(
+        state,
+        ctx,
+        new_mst,
+        FinalizeParams {
+            did,
+            user_id,
+            controller_did: None,
+            delegation_detail: None,
+            ops: vec![RecordOp::Delete {
+                collection: collection.clone(),
+                rkey: rkey.clone(),
+                prev: RecordCid::from(previous_cid),
+            }],
+            blob_cids: &[],
+            backlinks_to_add: vec![],
+            backlinks_to_remove: vec![uri],
+        },
+    )
+    .await
+    .map_err(to_commit_err)?;
+    Ok(Some(result.commit_cid))
 }
 
 pub async fn sequence_identity_event(

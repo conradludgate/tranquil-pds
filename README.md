@@ -69,6 +69,7 @@ podman-compose -f docker-compose.prod.yaml up -d
 - [Nix](docs/2_INSTALL_NIX.md)
 - [Containers](docs/2_INSTALL_CONTAINERS.md)
 - [SQLite with Litestream](docs/6_INSTALL_USING_SQLITE.md)
+- [GitOps file sources](docs/7_GITOPS_FILE_SOURCES.md)
 
 ## Community
 

@@ -321,6 +321,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
         state.eventlog_segments_dir.clone(),
         shutdown.clone(),
     ));
+    let gitops_handle = tranquil_pds::gitops::start_service(state.clone());
 
     let app = http3::with_host_from_authority(tranquil_pds::app_with_routes(
         state,
@@ -429,6 +430,10 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     scheduled_handle.await.ok();
+
+    if let Some(handle) = gitops_handle {
+        handle.await.ok();
+    }
 
     if let Err(e) = server_result {
         return Err(format!("Server error: {}", e).into());

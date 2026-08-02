@@ -760,6 +760,7 @@ fn wire_tranquil_store(
         delegation: Arc::new(client.clone()),
         sso: Arc::new(client),
         event_notifier: Arc::new(notifier),
+        gitops: None,
     };
 
     let signal_provider: Arc<dyn tranquil_signal::SignalStoreProvider> = Arc::new(

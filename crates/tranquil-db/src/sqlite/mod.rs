@@ -8,6 +8,7 @@ mod backlink;
 mod blob;
 mod delegation;
 mod event_notifier;
+mod gitops;
 mod infra;
 mod oauth;
 mod repo;
@@ -20,6 +21,7 @@ pub use backlink::SqliteBacklinkRepository;
 pub use blob::SqliteBlobRepository;
 pub use delegation::SqliteDelegationRepository;
 pub use event_notifier::SqliteRepoEventNotifier;
+pub use gitops::SqliteGitOpsRepository;
 pub use infra::SqliteInfraRepository;
 pub use oauth::SqliteOAuthRepository;
 pub use repo::SqliteRepoRepository;
@@ -30,8 +32,9 @@ pub use user::SqliteUserRepository;
 pub(crate) mod col;
 
 use tranquil_db_traits::{
-    BacklinkRepository, BlobRepository, DelegationRepository, InfraRepository, OAuthRepository,
-    RepoEventNotifier, RepoRepository, SessionRepository, SsoRepository, UserRepository,
+    BacklinkRepository, BlobRepository, DelegationRepository, GitOpsRepository, InfraRepository,
+    OAuthRepository, RepoEventNotifier, RepoRepository, SessionRepository, SsoRepository,
+    UserRepository,
 };
 
 pub struct SqliteRepositories {
@@ -46,11 +49,13 @@ pub struct SqliteRepositories {
     pub sso: Arc<dyn SsoRepository>,
     pub event_notifier: Arc<dyn RepoEventNotifier>,
     pub session: Arc<dyn SessionRepository>,
+    pub gitops: Arc<dyn GitOpsRepository>,
 }
 
 impl SqliteRepositories {
     pub fn new(pool: SqlitePool) -> Self {
         let notifier = Arc::new(SqliteRepoEventNotifier::new(256));
+        let gitops = Arc::new(SqliteGitOpsRepository::new(pool.clone()));
         Self {
             user: Arc::new(SqliteUserRepository::new(pool.clone())),
             backlink: Arc::new(SqliteBacklinkRepository::new(pool.clone())),
@@ -63,6 +68,7 @@ impl SqliteRepositories {
             event_notifier: notifier,
             session: Arc::new(SqliteSessionRepository::new(pool.clone())),
             pool: Some(pool),
+            gitops,
         }
     }
 }

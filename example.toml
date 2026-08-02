@@ -780,3 +780,18 @@
 #
 # Default value: 3600
 #event_retention_interval_secs = 3600
+
+[gitops]
+# Polling interval for mounted file sources.
+#
+# Can also be specified via environment variable `GITOPS_SCAN_INTERVAL_SECS`.
+#
+# Default value: 30
+#scan_interval_secs = 30
+
+# Each source is `name|path|did`. The directory must contain files in the
+# `collection/rkey.json` layout. Multiple sources may target the same DID.
+#
+# Can also be specified via environment variable `GITOPS_SOURCES` as a
+# comma-separated list.
+#sources = []
