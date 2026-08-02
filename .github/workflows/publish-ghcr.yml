@@ -47,10 +47,14 @@ jobs:
         with:
           context: .
           push: true
-          platforms: linux/amd64,linux/arm64
+          # The production Hetzner node is amd64. Building ARM64 on the
+          # amd64 GitHub-hosted runner requires emulation and is prohibitively
+          # slow for the Rust release build.
+          platforms: linux/amd64
           build-args: |
             BACKEND=sqlite
             COMPRESS=false
+            CARGO_BUILD_JOBS=4
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
