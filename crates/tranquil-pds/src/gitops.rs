@@ -460,6 +460,12 @@ fn collect_files(directory: &Path, files: &mut Vec<PathBuf>) -> Result<(), ScanE
         .map_err(|error| ScanError(format!("read directory {}: {error}", directory.display())))?;
     for entry in entries {
         let entry = entry.map_err(|error| ScanError(format!("read directory entry: {error}")))?;
+        // Kubernetes ConfigMap and Secret volumes keep the active payload in a
+        // timestamped directory and expose it through `..data` symlinks. Those
+        // implementation details are not part of the GitOps source layout.
+        if entry.file_name().to_string_lossy().starts_with("..") {
+            continue;
+        }
         let path = entry.path();
         let file_type = entry
             .file_type()
@@ -502,5 +508,26 @@ mod tests {
         fs::create_dir_all(&collection).unwrap();
         fs::write(collection.join("abc.json"), b"not json").unwrap();
         assert!(scan_directory(root.path()).is_err());
+    }
+
+    #[test]
+    fn ignores_kubernetes_configmap_projection_directories() {
+        let root = tempfile::tempdir().unwrap();
+        let collection = root.path().join("app.example.record");
+        fs::create_dir_all(&collection).unwrap();
+        fs::write(
+            collection.join("abc.json"),
+            br#"{"$type":"app.example.record","value":"ok"}"#,
+        )
+        .unwrap();
+
+        let projected = root.path().join("..2026_08_02_19_12_01.123456789");
+        let projected_collection = projected.join("app.example.record");
+        fs::create_dir_all(&projected_collection).unwrap();
+        fs::write(projected_collection.join("invalid.json"), b"not json").unwrap();
+
+        let snapshot = scan_directory(root.path()).unwrap();
+        assert_eq!(snapshot.len(), 1);
+        assert!(snapshot.contains_key("app.example.record/abc.json"));
     }
 }
