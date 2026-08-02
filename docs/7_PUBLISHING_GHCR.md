@@ -1,6 +1,6 @@
 # Publishing the SQLite image to GHCR
 
-The `sqlite-backend` branch publishes a multi-architecture image to:
+The `megamerge` branch publishes a multi-architecture image to:
 
 ```text
 ghcr.io/conradludgate/tranquil-pds:sqlite
